@@ -556,7 +556,7 @@ def vanguard_positions():
 def write_csv(path: Path, columns, rows, encoding="utf-8"):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding=encoding) as fh:
-        w = csv.DictWriter(fh, fieldnames=columns, extrasaction="ignore")
+        w = csv.DictWriter(fh, fieldnames=columns, extrasaction="ignore", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 
@@ -564,11 +564,11 @@ def write_csv(path: Path, columns, rows, encoding="utf-8"):
 def write_venmo(path: Path, year: int, rows):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
+        w = csv.writer(fh, lineterminator="\n")
         w.writerow([f"Account Statement - ({P.VENMO_HANDLE}) "] + [""] * 21)
         w.writerow(["Account Activity"] + [""] * 21)
         w.writerow(VENMO_COLUMNS)
-        w.writerow([""] * 16 + [f"${(hash(year) % 20000) / 100:.2f}"] + [""] * 5)
+        w.writerow([""] * 16 + [f"${(year * 7919 % 20000) / 100:.2f}"] + [""] * 5)
         for r in rows:
             amt = r["amount"]
             sign = "-" if amt < 0 else "+"
@@ -590,7 +590,7 @@ def write_vanguard(path: Path, positions):
         amt = r2(shares * P.VFIFX_NAV)
         lines.append(f"{acct},{d.isoformat()},{(d + dt.timedelta(days=1)).isoformat()},Buy,Buy,{P.STOCK_NAMES['VFIFX']},VFIFX,"
                      f"{shares},{P.VFIFX_NAV},-{amt},0.00,-{amt},0.00,CASH,")
-    path.write_text("﻿" + "\n".join(lines) + "\n", encoding="utf-8")
+    path.write_text("\ufeff" + "\n".join(lines) + "\n", encoding="utf-8", newline="\n")
 
 
 # ---------------------------------------------------------------------------------------------
@@ -619,7 +619,7 @@ def generate(out: Path, seed: int = 20260912) -> dict:
     write_csv(out / "cards" / f"Chase{P.FREEDOM}_Activity_20260801.csv", CARD_COLUMNS, card_csv_rows(per_card[P.FREEDOM], dt.date(2026, 8, 1), rng))
     write_csv(out / "cards" / f"Chase{P.FREEDOM}_Activity_20260901.csv", CARD_COLUMNS, card_csv_rows(per_card[P.FREEDOM], P.CARD_EXPORT, rng))
     write_csv(out / "cards" / f"Chase{P.PRIME}_Activity_20260901.csv", CARD_COLUMNS, card_csv_rows(per_card[P.PRIME], P.CARD_EXPORT, rng))
-    (out / "cards" / "statements.json").write_text(json.dumps([statements[P.FREEDOM], statements[P.PRIME]], indent=2) + "\n", encoding="utf-8")
+    (out / "cards" / "statements.json").write_text(json.dumps([statements[P.FREEDOM], statements[P.PRIME]], indent=2) + "\n", encoding="utf-8", newline="\n")
 
     # ---- amazon: two exports that overlap on December 2025
     write_csv(out / "amazon" / "amazon_order_history_2025.csv", AMAZON_COLUMNS,
@@ -693,10 +693,10 @@ def generate(out: Path, seed: int = 20260912) -> dict:
                            "datetime": ts, "date": ts[:10], "card_id": card, "merchant": merchant, "amount": f"{signed:.2f}",
                            "amount_cents": int(round(signed * 100)), "kind": kind, "issuer": "Chase", "subject": subject})
     write_csv(out / "alerts" / "alerts.csv", ALERT_COLUMNS, alert_rows)
-    (out / "alerts" / "review.json").write_text(json.dumps(P.ALERT_REVIEW, indent=2) + "\n", encoding="utf-8")
-    (out / "alerts" / "statement-balances.json").write_text(json.dumps([P.DISCOVER_STATEMENT], indent=2) + "\n", encoding="utf-8")
+    (out / "alerts" / "review.json").write_text(json.dumps(P.ALERT_REVIEW, indent=2) + "\n", encoding="utf-8", newline="\n")
+    (out / "alerts" / "statement-balances.json").write_text(json.dumps([P.DISCOVER_STATEMENT], indent=2) + "\n", encoding="utf-8", newline="\n")
     (out / "alerts" / "not-spending.json").write_text(json.dumps([hashlib.sha256(f"notice-{i}".encode()).hexdigest()[:16] for i in range(6)]) + "\n",
-                                                      encoding="utf-8")
+                                                      encoding="utf-8", newline="\n")
 
     summary = {
         "seed": seed, "as_of": P.AS_OF.isoformat(),
@@ -705,5 +705,5 @@ def generate(out: Path, seed: int = 20260912) -> dict:
         "alerts": len(alert_rows), "card_current_balances": current,
         "statement_balances": {c: statements[c]["statement_balance"] for c in statements},
     }
-    (out / "MANIFEST.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    (out / "MANIFEST.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8", newline="\n")
     return summary

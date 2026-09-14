@@ -1,7 +1,7 @@
 Account Statement - (@Casey-Morgan-12) ,,,,,,,,,,,,,,,,,,,,,
 Account Activity,,,,,,,,,,,,,,,,,,,,,
 ,ID,Datetime,Type,Status,Note,From,To,Amount (total),Amount (tip),Amount (tax),Amount (fee),Tax Rate,Tax Exempt,Funding Source,Destination,Beginning Balance,Ending Balance,Statement Period Venmo Fees,Terminal Location,Year to Date Venmo Fees,Disclaimer
-,,,,,,,,,,,,,,,,$20.15,,,,,
+,,,,,,,,,,,,,,,,$167.85,,,,,
 ,4424752127422648769,2015-08-01T22:44:13,Payment,Complete,Uber home,Casey Morgan,Sam Iyer,- $159.09,,0,,0,,Lakeshore Credit Union Checking,,,,,Venmo,,
 ,4092430255709447190,2015-08-01T22:57:42,Payment,Complete,Foodsies,Casey Morgan,Priya Natarajan,- $158.85,,0,,0,,Lakeshore Credit Union Checking,,,,,Venmo,,
 ,4768823528624669626,2015-08-06T16:24:53,Charge,Complete,Coffee,Sam Iyer,Casey Morgan,- $66.75,,0,,0,,Lakeshore Credit Union Checking,,,,,Venmo,,

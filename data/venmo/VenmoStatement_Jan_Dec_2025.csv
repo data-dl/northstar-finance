@@ -1,7 +1,7 @@
 Account Statement - (@Casey-Morgan-12) ,,,,,,,,,,,,,,,,,,,,,
 Account Activity,,,,,,,,,,,,,,,,,,,,,
 ,ID,Datetime,Type,Status,Note,From,To,Amount (total),Amount (tip),Amount (tax),Amount (fee),Tax Rate,Tax Exempt,Funding Source,Destination,Beginning Balance,Ending Balance,Statement Period Venmo Fees,Terminal Location,Year to Date Venmo Fees,Disclaimer
-,,,,,,,,,,,,,,,,$20.25,,,,,
+,,,,,,,,,,,,,,,,$159.75,,,,,
 ,4540283944692963928,2025-01-11T11:35:46,Charge,Complete,IMAX,Jo Park,Casey Morgan,- $27.00,,0,,0,,Lakeshore Credit Union Checking,,,,,Venmo,,
 ,4074751554522009630,2025-01-11T11:39:55,Payment,Complete,Brunch,Casey Morgan,Alex Carver,- $29.40,,0,,0,,Lakeshore Credit Union Checking,,,,,Venmo,,
 ,4460264133690955250,2025-01-12T21:50:23,Payment,Complete,Ramen,Casey Morgan,Dana Whitfield,- $35.05,,0,,0,,Lakeshore Credit Union Checking,,,,,Venmo,,
