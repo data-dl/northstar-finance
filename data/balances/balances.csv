@@ -1,0 +1,10 @@
+account,institution,account_type,fund,balance,as_of,contributing,source_file,notes
+Vanguard Brokerage x3142,Vanguard,Taxable brokerage,VFIFX core + AAPL/MSFT/COST,74610.23,2026-09-01,n/a,VANGUARD_ACCOUNT_LIST.csv,
+Vanguard Roth IRA x8827,Vanguard,Roth IRA,VFIFX + AAPL/MSFT,52897.93,2026-09-01,yes,VANGUARD_ACCOUNT_LIST.csv,
+Vanguard Rollover IRA x5510,Vanguard,Rollover IRA (pre-tax),VFIFX Target Retirement 2050,51400.95,2026-09-01,yes,VANGUARD_ACCOUNT_LIST.csv,
+Vanguard Cash Plus x0417,Vanguard,Cash Plus (bank sweep),Vanguard Cash Plus,9150.00,2026-09-01,n/a,VANGUARD_ACCOUNT_LIST.csv,
+County Library 403b,Voya,403(b) pre-tax,Target Retirement 2050 Trust,27310.44,2026-07,yes,voya_statement_2026-07.pdf,Quarterly statement; balance moves with the target-date trust
+Prior-state pension DC x2290,State Retirement System,Pension DC pre-tax,State 2050 Fund,11062.18,2026-07,no,state_dc_statement_2026-07.pdf,Defined-contribution side of the prior employer's plan; static
+Lakeshore Credit Union Savings + Checking,Lakeshore Credit Union,Bank checking + savings,Share Savings 0001 + Free Checking 0072,24880.35,2026-09-01,n/a,transactions_2025-11-01_2026-08-31.csv,"Ending balances from the Aug 31 statement, rolled forward"
+Fidelity Individual x4471,Fidelity,Taxable brokerage (individual),Individual stocks + ETFs,7400.00,2026-06-30,n/a,fidelity_statement_2026-06.pdf,Quarterly statement; no position-level export
+Loan to Alex Carver (due 2026-12-20),Personal,Receivable,Principal lent 2026-08-20,3500.00,2026-08-20,n/a,config.yaml,Signed note; repayment expected in one piece

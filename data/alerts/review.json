@@ -1,0 +1,10 @@
+[
+  {
+    "alert_id": "1a0c44e0b2f9d3a7",
+    "subject": "You made a $1.00 transaction with SPEEDWAY 04412",
+    "reason": "decline, reversal or authorisation hold - not settled spending",
+    "received": "2026-09-10 07:52",
+    "card_id": "4417",
+    "from": "no.reply.alerts@chase.com"
+  }
+]

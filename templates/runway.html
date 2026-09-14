@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emergency Runway Calculator</title>
+<style>
+  :root{
+    --ink:#f7f6f2;--panel:#fdfcf9;--panel-2:#f2f0ea;--line:#e5e1d7;
+    --paper:#1f2630;--muted:#5a6270;--faint:#616975;
+    --green:#006300;--amber:#8a6300;--coral:#b52d2d;--blue:#2551b8;--violet:#6a4bb8;--gold:#7d5a00;
+    --amber-mark:#e39c07;--blue-mark:#2f66e0;--green-mark:#17734a;--coral-mark:#b52d2d;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 4px 16px rgba(16,24,40,.05);
+    --r:14px;
+  }
+  html{color-scheme:light}
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ink);color:var(--paper);
+    font-family:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;font-size:19px;line-height:1.6;padding:0 18px}
+  .wrap{max-width:860px;margin:0 auto;padding:44px 0 70px}
+  .num{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+  .eyebrow{font-size:13px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  h1{font-size:clamp(30px,5.5vw,46px);line-height:1.04;margin:.3em 0 .15em;font-weight:700;letter-spacing:-.5px}
+  .sub{color:var(--muted);font-size:17px;max-width:60ch;margin:0}
+  .rule{height:2px;background:var(--line);border:0;margin:30px 0}
+
+  /* result hero */
+  .result{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;margin-bottom:24px;border-left:5px solid var(--green);transition:border-color .3s}
+  .result .big{font-size:clamp(46px,11vw,82px);font-weight:700;line-height:.9;letter-spacing:-2px;color:var(--green);transition:color .3s}
+  .result .big small{font-size:22px;color:var(--muted);font-weight:600;letter-spacing:0}
+  .result .verdict{font-size:18px;margin:12px 0 0;color:var(--paper)}.result .verdict b{font-weight:700}
+
+  /* chart */
+  .svgwrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 14px 8px;margin-bottom:24px}
+  svg{display:block;width:100%;height:auto}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin:10px 6px 2px;font-size:14px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+  /* controls */
+  .ctrl{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:16px}
+  .ctrl .lab{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;font-size:17px;margin-bottom:12px}
+  .ctrl .lab .v{font-size:24px;font-weight:700;color:var(--blue)}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:999px;background:var(--panel-2);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;border-radius:50%;background:var(--blue);cursor:pointer;border:3px solid var(--ink);box-shadow:0 0 0 1px var(--blue)}
+  input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:var(--blue);cursor:pointer;border:3px solid var(--ink)}
+  input[type=range]:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .preset{flex:1 1 auto;background:var(--panel-2);border:1px solid var(--line);color:var(--paper);font:inherit;font-size:14.5px;font-weight:700;padding:10px 12px;border-radius:10px;cursor:pointer}
+  .preset:hover{border-color:var(--blue)}.preset[aria-pressed="true"]{background:var(--paper);color:var(--ink)}
+  .preset small{display:block;color:var(--muted);font-weight:600;font-size:12px}.preset[aria-pressed="true"] small{color:#c2cad6}
+
+  .toggle{display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .switch{position:relative;width:58px;height:32px;flex:0 0 58px}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;inset:0;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;cursor:pointer;transition:.2s}
+  .slider:before{content:"";position:absolute;height:24px;width:24px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:.2s}
+  .switch input:checked + .slider{background:rgba(19,122,75,.3);border-color:var(--green)}
+  .switch input:checked + .slider:before{transform:translateX(26px);background:var(--green-mark)}
+  .switch input:focus-visible + .slider{outline:3px solid var(--blue);outline-offset:3px}
+  .uifields{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .uifields.off{opacity:.4;pointer-events:none}
+  @media (max-width:760px){.uifields{grid-template-columns:1fr 1fr}}
+  @media (max-width:520px){.uifields{grid-template-columns:1fr}}
+
+  .suite-nav{margin:0 -18px;border-bottom:1px solid var(--line);background:#f7f6f2}
+  .suite-nav-inner{max-width:960px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none}
+  .suite-nav-inner::-webkit-scrollbar{display:none}.suite-brand{color:var(--paper);font-size:13px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;margin-right:auto;white-space:nowrap}
+  .suite-brand i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:8px;background:linear-gradient(135deg,#0f9e69,var(--blue-mark));box-shadow:0 0 18px rgba(15,158,105,.25)}
+  .suite-nav a{color:var(--muted);font-size:13px;font-weight:700;padding:7px 10px;border-radius:8px;text-decoration:none;white-space:nowrap}
+  .suite-nav a:hover,.suite-nav a.active{color:var(--paper);background:var(--panel)}
+  .scenario-summary{margin-top:14px;padding-top:13px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}.scenario-summary b{color:var(--paper)}
+  .obligations{display:grid;gap:2px}.mini-toggle{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}.mini-toggle:first-child{border-top:0;padding-top:0}.mini-toggle:last-child{padding-bottom:0}
+  .mini-toggle b{display:block;font-size:16px}.mini-toggle p{color:var(--muted);font-size:13px;margin:2px 0 0}.mini-toggle strong{color:var(--blue);font-size:16px}.mini-toggle input{width:21px;height:21px;accent-color:var(--green);margin-left:10px}
+  .mini-side{display:flex;align-items:center;gap:8px}
+  @media(max-width:620px){.suite-nav-inner{align-items:flex-start}.suite-brand{position:sticky;left:0;background:#f7f6f2;padding:7px 10px 7px 0}.suite-nav a{padding:7px 8px}}
+
+  .foot{color:var(--faint);font-size:13.5px;margin-top:24px;line-height:1.7;border-top:1px solid var(--line);padding-top:18px}
+  .foot b{color:var(--muted)}
+  :focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:6px}
+</style>
+</head>
+<body>
+<nav class="suite-nav" aria-label="Financial suite">
+  <div class="suite-nav-inner">
+    <a class="suite-brand" href="index.html"><i></i>Northstar 2.0</a>
+    <a href="index.html">Command center</a>
+    <a href="dashboard.html">Money dashboard</a>
+    <a class="active" href="runway.html" aria-current="page">Emergency runway</a>
+    <a href="portfolio_gauge.html">Portfolio gauge</a>
+  </div>
+</nav>
+<div class="wrap">
+  <div class="eyebrow">If the paycheck stopped tomorrow</div>
+  <h1>Emergency Runway</h1>
+  <p class="sub">How long your cash lasts at a given burn rate — with state unemployment factored in. Drag the sliders; everything updates live.</p>
+  <hr class="rule">
+
+  <!-- RESULT -->
+  <div class="result" id="resultbox">
+    <div class="big num" id="runwayNum">—</div>
+    <p class="verdict" id="verdict"></p>
+    <div class="scenario-summary" id="scenarioSummary">—</div>
+  </div>
+
+  <!-- CHART -->
+  <div class="svgwrap"><div id="chart"></div></div>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--blue)"></i>Cash balance</span>
+    <span><i class="dot" style="background:rgba(19,122,75,.5)"></i>Unemployment period</span>
+    <span><i class="dot" style="background:var(--coral)"></i>Empty</span>
+  </div>
+
+  <!-- BURN -->
+  <div class="ctrl">
+    <div class="lab"><label for="burn">Monthly burn rate</label><span class="v num" id="burnV">—</span></div>
+    <input type="range" id="burn" min="1800" max="4500" step="50" value="3400" aria-label="Monthly burn rate in dollars">
+    <div class="presets" id="burnPresets">
+      <button class="preset" data-burn="2200" aria-pressed="false">Bare bones<small>—</small></button>
+      <button class="preset" data-burn="2600" aria-pressed="false">Trimmed<small>—</small></button>
+      <button class="preset" data-burn="3400" aria-pressed="true">Full lifestyle<small>—</small></button>
+    </div>
+  </div>
+
+  <!-- CASH -->
+  <div class="ctrl">
+    <div class="lab"><label for="cash">Spendable cash on hand</label><span class="v num" id="cashV">—</span></div>
+    <input type="range" id="cash" min="5000" max="60000" step="0.01" value="30000" aria-label="Spendable cash on hand in dollars">
+  </div>
+
+  <div class="ctrl obligations" aria-label="Near-term obligations and expected cash">
+    <label class="mini-toggle" for="netcards"><span><b>Reserve current card balances</b><p>Subtract what is already owed before calling cash “runway.”</p></span><span class="mini-side"><strong class="num" id="cardReserveV">—</strong><input type="checkbox" id="netcards" checked></span></label>
+    <label class="mini-toggle" for="repayment"><span><b>Include friend repayment when received</b><p id="repaymentNote">Expected cash is excluded by default because timing is uncertain.</p></span><span class="mini-side"><strong class="num" id="repaymentV">—</strong><input type="checkbox" id="repayment"></span></label>
+  </div>
+
+  <!-- UI -->
+  <div class="ctrl">
+    <div class="toggle">
+      <label for="ui" style="font-weight:700;font-size:17px">Collecting state unemployment?</label>
+      <span class="switch"><input type="checkbox" id="ui" checked aria-label="Toggle state unemployment benefits"><span class="slider"></span></span>
+    </div>
+    <div class="uifields" id="uifields">
+      <div>
+        <div class="lab" style="margin-bottom:8px"><label for="uiamt">Weekly benefit (gross)</label><span class="v num" id="uiamtV" style="font-size:19px">—</span></div>
+        <input type="range" id="uiamt" min="200" max="869" step="0.01" value="818" aria-label="Gross weekly unemployment benefit in dollars">
+      </div>
+      <div>
+        <div class="lab" style="margin-bottom:8px"><label for="uiwks">Weeks of benefit</label><span class="v num" id="uiwksV" style="font-size:19px">26</span></div>
+        <input type="range" id="uiwks" min="0" max="26" step="1" value="26" aria-label="Number of weeks of unemployment benefit">
+      </div>
+      <div>
+        <div class="lab" style="margin-bottom:8px"><label for="uitax">Benefit tax reserve</label><span class="v num" id="uitaxV" style="font-size:19px">12.5%</span></div>
+        <input type="range" id="uitax" min="0" max="25" step="0.5" value="12.5" aria-label="Percentage of unemployment benefit reserved for taxes">
+      </div>
+    </div>
+  </div>
+
+  <div class="foot" id="runwayFoot">
+    <b>How it works:</b> Each month, cash drops by (burn − any unemployment income). Loading your numbers…
+  </div>
+</div>
+<script src="data.js"></script>
+
+<script>
+  const $=id=>document.getElementById(id);
+  const fmt=n=>'$'+Math.round(n).toLocaleString();
+  const DATA=window.DASHBOARD_DATA||{}, NET=DATA.net_worth_detail||{};
+  const CARD_TOTAL=(NET.liabilities||[]).filter(x=>x.source_type==='credit_card').reduce((a,x)=>a+(+x.balance||0),0);
+  const LOAN=(DATA.loans_out||[])[0]||{};
+  const LOAN_MONTH=Math.max(1,Math.ceil((new Date((LOAN.due||'2026-12-20')+'T12:00:00')-new Date(((DATA.month_review||{}).as_of||'2026-08-31')+'T12:00:00'))/(1000*60*60*24*30.44)));
+
+  (function initFromData(){
+    var R = (window.DASHBOARD_DATA && window.DASHBOARD_DATA.runway_inputs) || {};
+    var cash = R.cash_hysa!=null ? R.cash_hysa : 30000;
+    var uiMax = R.state_max_weekly || 583;
+    var uiDefault = R.est_weekly_benefit!=null ? +R.est_weekly_benefit : +(uiMax*0.94).toFixed(2);
+    var weeks = R.default_weeks!=null ? R.default_weeks : 26;
+    var maxWeeks = R.max_weeks!=null ? R.max_weeks : 26;
+    var taxReserve = R.tax_withholding_pct!=null ? R.tax_withholding_pct : 12.5;
+    var presets = (R.burn_presets && R.burn_presets.length===3) ? R.burn_presets : [2200,2600,3400];
+    var presetLabels = ['Bare bones','Trimmed','Full lifestyle'];
+
+    $('cash').value = cash;
+    $('uiamt').max = uiMax;
+    $('uiamt').value = uiDefault;
+    uiDefault = +$('uiamt').value;
+    $('uiwks').max = maxWeeks;
+    $('uiwks').value = weeks;
+    $('uitax').value = taxReserve;
+    $('burn').value = presets[presets.length-1];
+    $('cardReserveV').textContent = fmt(CARD_TOTAL);
+    $('repaymentV').textContent = fmt(LOAN.principal||0);
+    $('repaymentNote').textContent = 'Expected '+(LOAN.due||'repayment date unknown')+'; excluded by default because timing is uncertain.';
+
+    var host = $('burnPresets');
+    host.innerHTML = presets.map(function(p,i){
+      return '<button class="preset" data-burn="'+p+'" aria-pressed="'+(i===presets.length-1?'true':'false')+'">'+presetLabels[i]+'<small>'+fmt(p)+'/mo</small></button>';
+    }).join('');
+    host.querySelectorAll('.preset').forEach(function(p){p.addEventListener('click',function(){$('burn').value=p.dataset.burn;render();});});
+
+    var gross = R.gross_annual!=null ? fmt(R.gross_annual) : 'your salary';
+    $('runwayFoot').innerHTML = '<b>How it works:</b> Each month, cash drops by burn minus after-reserve unemployment income. Current card balances are reserved by default; the friend repayment is excluded until you deliberately include it. Your paystub puts your gross at '+gross+', so the stored planning estimate is <b>'+fmt(uiDefault)+'/week gross</b> for up to '+weeks+' weeks. The default <b>'+taxReserve.toFixed(1)+'% tax reserve</b> mirrors optional 10% federal plus 2.5% state withholding. Benefits are taxable, eligibility can change, and the estimate is not a guarantee. This counts <b>cash only</b> — brokerage assets and Roth contribution basis are deeper backstops not modeled. Health coverage after job loss also needs to be added to the burn you choose.';
+  })();
+
+  function compute(){
+    const baseCash=+$('cash').value, burn=+$('burn').value;
+    const cardReserve=$('netcards').checked?CARD_TOTAL:0, cash=Math.max(0,baseCash-cardReserve);
+    const repayment=$('repayment').checked?(+LOAN.principal||0):0;
+    const uiOn=$('ui').checked, uiWeekly=uiOn?+$('uiamt').value:0, uiWeeks=uiOn?+$('uiwks').value:0;
+    const uiTaxPct=uiOn?+$('uitax').value:0, weeksPerMonth=52/12, uiMonthly=uiWeekly*(1-uiTaxPct/100)*weeksPerMonth, uiMonths=uiWeeks/weeksPerMonth;
+    const MONTHS=60; let bal=cash, runway=null, peak=cash;
+    const pts=[{m:0,b:cash,ui:false}];
+    for(let m=1;m<=MONTHS;m++){
+      if(repayment && m===LOAN_MONTH){bal+=repayment;peak=Math.max(peak,bal);}
+      const weeksThisMonth=uiOn?Math.min(weeksPerMonth,Math.max(0,uiWeeks-(m-1)*weeksPerMonth)):0;
+      const onUI=weeksThisMonth>0;
+      const inc=uiWeekly*(1-uiTaxPct/100)*weeksThisMonth, net=burn-inc, prev=bal;
+      bal=bal-net;
+      pts.push({m,b:bal,ui:onUI});
+      if(bal>peak)peak=bal;
+      if(runway===null && bal<=0){ runway=(m-1)+(net>0?prev/net:1); }
+    }
+    return {baseCash,cash,cardReserve,repayment,burn,uiMonthly,uiMonths,pts,runway,peak,uiOn,uiWeeks,uiTaxPct};
+  }
+  function render(){
+    const r=compute();
+    // result
+    const box=$('resultbox'), num=$('runwayNum'), verd=$('verdict');
+    let col,txt;
+    if(r.runway===null){
+      col='var(--green)'; num.innerHTML='60+ <small>months</small>';
+      txt='<b>Still positive after five years.</b> The model stops at 60 months; it does not call a temporary benefit stream indefinite.';
+    } else {
+      const mo=r.runway;
+      num.innerHTML=mo.toFixed(1)+' <small>months</small>';
+      if(mo>=18){col='var(--green)';txt='<b>More than a year and a half.</b> Strong liquidity, even after the obligations selected below.';}
+      else if(mo>=12){col='var(--green)';txt='<b>Covers a full year \u2014 and then some.</b> This is a strong cash-only runway under the selected assumptions.';}
+      else if(mo>=9){col='var(--amber)';txt='<b>Nearly a year.</b> Solid \u2014 above the standard 6-month emergency-fund rule. A little trimming or your brokerage closes the gap to 12 months.';}
+      else if(mo>=6){col='var(--amber)';txt='<b>'+mo.toFixed(1)+' months.</b> Meets the classic 6-month rule, but short of a year. Trim the burn or lean on investments for the back half.';}
+      else {col='var(--coral)';txt='<b>Under 6 months.</b> Tighter than ideal on cash alone \u2014 worth trimming the burn, or planning to tap your brokerage.';}
+    }
+    box.style.borderLeftColor=col; num.style.color=col; verd.innerHTML=txt;
+    $('scenarioSummary').innerHTML='<b>'+fmt(r.baseCash)+'</b> starting cash '+(r.cardReserve?'− <b>'+fmt(r.cardReserve)+'</b> reserved for cards ':'')+'= <b>'+fmt(r.cash)+'</b> effective starting runway. '+(r.uiOn?'Benefits are modeled after a <b>'+r.uiTaxPct.toFixed(1)+'% tax reserve</b>. ':'')+(r.repayment?'The expected '+fmt(r.repayment)+' repayment is added in month '+LOAN_MONTH+'.':'The '+fmt(LOAN.principal||0)+' expected repayment is not counted.');
+    // labels
+    $('burnV').textContent=fmt(r.burn); $('cashV').textContent=fmt(r.baseCash);
+    $('uiamtV').textContent=fmt(+$('uiamt').value); $('uiwksV').textContent=$('uiwks').value; $('uitaxV').textContent=(+$('uitax').value).toFixed(1)+'%';
+    $('uifields').classList.toggle('off',!r.uiOn);
+    // presets pressed state
+    document.querySelectorAll('.preset').forEach(p=>p.setAttribute('aria-pressed', (+p.dataset.burn===r.burn)?'true':'false'));
+    drawChart(r);
+  }
+  function drawChart(r){
+    const W=860,H=300,padL=58,padR=14,padT=22,padB=40;
+    const MONTHS=36, visible=r.pts.filter(p=>p.m<=MONTHS), yMax=Math.max(...visible.map(p=>p.b),r.cash)*1.08, plotW=W-padL-padR, plotH=H-padT-padB;
+    const x=m=>padL+(m/MONTHS)*plotW;
+    const y=v=>padT+plotH-(Math.max(0,v)/yMax)*plotH;
+    let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cash balance over 36 months. Runway about '+(r.runway===null?'over 36':r.runway.toFixed(1))+' months.">';
+    // UI shaded region
+    if(r.uiOn && r.uiMonths>0){const xe=x(Math.min(r.uiMonths,MONTHS));
+      s+='<rect x="'+padL+'" y="'+padT+'" width="'+(xe-padL)+'" height="'+plotH+'" fill="#17734a" opacity="0.12"/>';
+      s+='<text x="'+((padL+xe)/2)+'" y="'+(padT+14)+'" fill="#17734a" font-size="12" font-weight="700" text-anchor="middle">unemployment</text>';}
+    // gridlines + y labels
+    for(let i=0;i<=4;i++){const val=yMax*i/4, yy=y(val);
+      s+='<line x1="'+padL+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="#e5e1d7" stroke-width="1"/>';
+      s+='<text x="'+(padL-8)+'" y="'+(yy+4)+'" fill="#5a6270" font-size="12" text-anchor="end" font-family="ui-monospace,monospace">$'+Math.round(val/1000)+'k</text>';}
+    // x labels
+    for(let m=0;m<=MONTHS;m+=6){s+='<text x="'+x(m)+'" y="'+(H-padB+20)+'" fill="#5a6270" font-size="12" text-anchor="middle">'+m+'</text>';}
+    s+='<text x="'+(padL+plotW/2)+'" y="'+(H-4)+'" fill="#616975" font-size="12" text-anchor="middle">months without a paycheck</text>';
+    // area + line (clip at zero)
+    let area='M '+x(0)+' '+y(visible[0].b);
+    let lastM=0;
+    visible.forEach(p=>{ if(p.b>=0){ area+=' L '+x(p.m)+' '+y(p.b); lastM=p.m;} });
+    // find zero-crossing x for area close
+    let zeroX=x(MONTHS), zeroDrawn=false;
+    if(r.runway!==null && r.runway<=MONTHS){ zeroX=x(r.runway); zeroDrawn=true; }
+    area+=' L '+zeroX+' '+y(0)+' L '+x(0)+' '+y(0)+' Z';
+    s+='<path d="'+area+'" fill="#2f66e0" opacity="0.16"/>';
+    // line
+    let line=''; visible.forEach((p,i)=>{ if(p.b>=0){ line+=(line?' L ':'M ')+x(p.m)+' '+y(p.b); } });
+    if(zeroDrawn) line+=' L '+zeroX+' '+y(0);
+    s+='<path d="'+line+'" fill="none" stroke="#2f66e0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+    // depletion marker
+    if(zeroDrawn){
+      s+='<circle cx="'+zeroX+'" cy="'+y(0)+'" r="6" fill="#b52d2d"/>';
+      s+='<text x="'+zeroX+'" y="'+(y(0)-12)+'" fill="#b52d2d" font-size="13" font-weight="800" text-anchor="middle" font-family="ui-monospace,monospace">'+r.runway.toFixed(1)+' mo</text>';
+    }
+    s+='</svg>';
+    $('chart').innerHTML=s;
+  }
+  // events
+  ['burn','cash','ui','uiamt','uiwks','uitax','netcards','repayment'].forEach(id=>$(id).addEventListener('input',render));
+  render();
+</script>
+</body>
+</html>

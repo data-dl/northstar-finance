@@ -1,0 +1,3 @@
+card_id,card_name,current_balance,as_of,source_file
+4417,Chase Freedom,1734.07,2026-09-01,Chase4417_Activity_20260901.csv
+8802,Chase Prime Visa,605.96,2026-09-01,Chase8802_Activity_20260901.csv

@@ -1,0 +1,5 @@
+pandas>=2.0
+pyyaml>=6
+pdfplumber>=0.11              # optional: statement PDFs (data/bank/*.pdf, data/cards/*.pdf)
+# google-api-python-client>=2 # optional: tools/sync_alerts.py (read-only Gmail fetch)
+# google-auth-oauthlib>=1

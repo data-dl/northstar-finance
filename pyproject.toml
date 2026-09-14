@@ -1,0 +1,21 @@
+[project]
+name = "northstar-finance"
+version = "1.0.0"
+description = "Personal-finance pipeline: raw bank, card, Amazon, Venmo and Chewy exports in, four reconciled dashboards out. Ships with a synthetic household so it runs end to end without a real account."
+requires-python = ">=3.11"
+dependencies = ["pandas>=2.0", "pyyaml>=6"]
+
+[project.optional-dependencies]
+pdf = ["pdfplumber>=0.11"]                                   # credit-union and card statement PDFs
+gmail = ["google-api-python-client>=2", "google-auth-oauthlib>=1"]   # the read-only alert fetch
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["finlib*", "synth*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

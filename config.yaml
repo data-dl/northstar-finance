@@ -1,0 +1,534 @@
+# Northstar configuration -- everything household-specific lives here, nothing in code.
+#
+# This copy describes the SAMPLE household that `python -m synth` generates: Casey Morgan, a
+# systems analyst at a county library in the fictional city of Lakeview. Every name, employer,
+# merchant, account and amount is invented. Replace the values (not the keys) to point the
+# pipeline at a real set of exports. See docs/DESIGN.md Sec.6 for what each block does.
+
+identity:
+  name: Casey
+  venmo_name: "Casey Morgan"          # how Venmo prints the account holder in From/To
+  employer: Lakeview County Public Library
+
+pay:                          # transcribed from the two most recent paystubs; update on any raise
+  annual_salary: 81250.00
+  frequency: biweekly
+  checks_per_year: 26
+  per_check_gross: 3125.00
+  per_check_net: 1970.68
+  deductions_per_check:        # before-tax + taxes + after-tax; must sum with net to gross, to the cent
+    fed_withholding: 386.44
+    social_security: 193.75    # Fed OASDI/EE (6.2%)
+    medicare: 45.31            # Fed MED/EE (1.45%)
+    state_withholding: 109.38
+    local_withholding: 46.37   # city income tax
+    contrib_403b: 171.88       # 5.5% elective deferral
+    pension: 179.69            # county defined-benefit plan, 5.75% employee share
+    union_dues: 21.50
+  health_premium_employee: 0.00   # the county pays 100% -- no premium line on the stub
+  limits_2026:
+    contrib_403b_cap: 24500        # 2026 IRS 402(g) limit
+    contrib_457b_cap: 24500        # separate 457(b) limit, also 24,500 for 2026
+
+cards:
+  # autopay: confirmed from the issuer's "statement is available" alerts, which print
+  # "Auto-pay enabled" per card. Without this the command center reads a passed due
+  # date as an unpaid bill and nags about a card that pays itself.
+  "4417": {name: "Chase Freedom", role: "everyday / groceries / general", autopay: true, issuer: "Chase", alerts: true}
+  "8802": {name: "Chase Prime Visa", role: "amazon + mail-order pharmacy", autopay: true, issuer: "Chase", alerts: true}
+  # Discover it, moved to Capital One servicing Jul 2026. No statement CSV is exported for it
+  # and transaction alerts are off, so it contributes nothing until one of those changes -- it is
+  # listed so an alert from it is recognised rather than quarantined as an unknown card.
+  # `alerts: false` means the tally falls back to the balance printed in its monthly
+  # "statement is ready" email; `statement_subject` matches that email (it names the product).
+  "3160": {name: "Discover it (Capital One)", role: "third card, rarely used", autopay: true,
+           issuer: "Capital One", alerts: false, statement_subject: "discover it"}
+
+entities:
+  # Bank transfers to the family account. Matched on the surname because the first name is
+  # truncated on the incoming/credit side of some statements.
+  family_desc_match: "linda morgan"
+  fruit_vendor: "Lakeview Fruit Cart"   # farmers-market fruit stand, paid by Venmo
+  movie_buddy: "Jo Park"
+  settled_loan_status: "repaid_settled"  # do NOT treat as receivable
+  settled_loan_desc_match: "okonkwo"
+  rent_recipients_venmo: ["Priya Natarajan", "Marcus Bell", "Dana Whitfield"]
+  # Venmo counterparties whose payments are NOT consumption: principal on a tracked loan, and
+  # one-off social events. Tagged separately so they never dilute the fruit/movies/meals mix
+  # that splits the bank's "Transfer to Venmo" rows across categories.
+  loan_recipients_venmo: []
+  event_recipients_venmo: ["Jordan Reyes"]
+
+events:                        # markers used in trend framing
+  cooking_started: 2026-04-06
+  card_points_pivot: 2026-05-19
+  # enrolled in Chewy Autoship (confirmation email, Jul 15 2026) -- closes the Autoship red flag
+  chewy_autoship_started: 2026-07-15
+
+# Read-only mailbox audit performed during the latest refresh. These figures are provenance, not
+# transactions: every order confirmation in the mailbox was matched against the exports on file.
+email_audits:
+  as_of: "2026-09-01"
+  chewy: {confirmed_orders_ytd: 9, missing_orders: 0}
+  amazon:
+    orders_reconciled_in_latest_export: 3
+    item_subtotal_reconciled: 61.47
+    charged_total_verified: 65.77
+    latest_export_as_of: "2026-09-01"
+
+# Credit-union statement PDFs (data/bank/*.pdf) extend the bank history before the CSV exports.
+# `accounts` maps the statement's section headings onto the Account label the CSV export uses;
+# `rewrites` map raw statement wording onto the clean forms the reconcile rules expect.
+bank_statement_pdf:
+  accounts:
+    "Share Savings ID 0001": "SHARE SAVINGS"
+    "Free Checking ID 0072": "FREE CHECKING"
+  rewrites:
+    - {contains: ["county payroll"], description: "Lakeview County Payroll", parent: "Income"}
+    - {contains: ["chase credit crd", "co: chase"], description: "Chase Credit Card", parent: "Transfer"}
+    - {contains: ["co: capital one"], description: "Capital One Card", parent: "Transfer"}
+    - {contains: ["co: venmo", "ach venmo"], description: "Transfer to Venmo", parent: null}
+    - {contains: ["vanguard", "co: vmc"], description: "Vanguard Buy", parent: "Investments"}
+
+bank_internal_transfer_descriptions:
+  - "Transfer To Share"
+  - "Transfer to Share 0072"
+  - "Transfer from Account 0001"
+  - "Transfer from Account 0072"
+  - "Transfer from Share 0001"
+
+investing_desc_match: "Vanguard Buy"
+# Card payments to exclude from direct spend (their purchases are counted from the card files).
+card_payment_desc_matches:
+  - "Chase Credit Card"
+  - "Discover Card"
+  - "Capital One Card"
+# The bank only ever says "Transfer to Venmo", so the whole habit used to land in one opaque
+# bucket. The Venmo statement names a counterparty on every payment, so each month's bank
+# transfer is split across the categories it actually funded, in that month's proportions
+# (window-wide proportions when a month's transfer has no Venmo payments to explain it).
+# Money is conserved -- the bank amount stays authoritative, only its label is refined.
+# Keys are the entity_tag values from reconcile.reconcile_venmo; values are the synthetic
+# descriptions, each of which must match a keyword in `categories` below. Delete a key to send
+# that slice back to the generic "venmo" bucket; delete the whole block to turn splitting off.
+venmo_category_split:
+  fruit:  "Venmo fruit stand"
+  movies: "Venmo movie tickets"
+  other:  "Venmo shared meals"
+  events: "Venmo cabin weekend"
+
+# Money lent to a person and expected back. Lending is a BALANCE-SHEET move, not consumption:
+# the cash leaves but an equal receivable arrives, so these debits go to the LOAN_OUT bucket and
+# never touch spending. The principal is carried as an asset in data/balances/balances.csv.
+# Matches are narrow on purpose -- keyword AND date window -- so ordinary transfers sharing a
+# descriptor are never swept up. When a loan is repaid, delete the entry here and the balances.csv row.
+loans_out:
+  - name: "Loan to Alex Carver"
+    borrower: "Alex Carver"
+    principal: 3500.00
+    lent_on: "2026-08-20"
+    due: "2026-12-20"
+    note: "Funded from credit-union savings on 2026-08-20; signed note, repayment expected in one piece. Carried as a receivable, not spending."
+    match:
+      - {desc: "zelle to alex carver", from: "2026-08-20", to: "2026-08-20"}
+
+# Transactions that have happened but are not in any export yet, so the dashboard is not blind to
+# the last few days. They are shown as pending activity, but are not mixed into completed-month
+# averages. Once bank data reaches `date`, the real row takes over and this one drops itself, so it
+# can never double-count. `desc` should still match a `categories` keyword for the eventual row.
+manual_transactions:
+  - date: "2026-09-02"
+    desc: "Venmo cabin weekend"
+    amount: 210.00
+    source: "Venmo -> Jordan Reyes, funded from Lakeshore checking; confirmed 2026-09-02"
+
+# Facts only the account holder knows. A statement line reads TARGET 00028215 whether the basket
+# was medication or a lamp, and no receipt exists for an in-store swipe, so the knowledge has to be
+# recorded here or lost. A note pins ONE charge: the date, the amount and a fragment of the
+# description must all match, so it can never spread to a different purchase at the same store.
+# `category` optionally re-files the charge (use a key from `categories`); `note` explains it in
+# the drill-down. Both are optional.
+transaction_notes:
+  - date: "2026-08-14"
+    match: "target"
+    amount: 27.85
+    category: drugstore
+    note: "Allergy medication, bought in store at Target -- so the statement line is indistinguishable from any other Target basket."
+  - date: "2026-08-06"
+    match: "target"
+    amount: 46.20
+    partial: true
+    note: "Partly a desk lamp; the rest of the basket is not recalled and Target emails no receipt for an in-store swipe, so this one stays half-explained rather than guessed at."
+
+# Some merchants only itemize in email, never on the statement. A note here is attached to that
+# merchant wherever its charge is drilled into, so an opaque line becomes a purchase you recognise.
+# Keys are the cleaned merchant name as it appears in the merchant tables (case-insensitive).
+merchant_notes:
+  "Target": "In-store swipe. Target does not email a receipt for these, so the basket cannot be itemized."
+  "Lakeview Dental Group": "Cleaning plus one filling. Billed at the desk, no emailed receipt."
+  "Lakeview Aquatics": "Eight-week lap-swim block booked Aug 22."
+  "Amtrak": "Round trip for the cabin weekend."
+
+venmo_transfer_desc_match: "Transfer to Venmo"
+
+# What counts as payroll, matched against the bank row's description/original-description/memo.
+# Anything else that lands in the INCOME bucket -- a settlement payout, a refund, a reimbursement --
+# is still income, but it's tagged non-salary so the dashboard's "salary only" toggle can strip it.
+# That toggle answers the question that matters: does the paycheck alone cover the life? A windfall
+# landing in one month otherwise makes that month look structurally better than it was. Deliberately
+# an allow-list, so a *new* odd deposit is excluded by default rather than quietly inflating the
+# salary-only rate.
+payroll_desc_matches:
+  - "county payroll"
+
+# Known non-payroll deposits, so the dashboard can name them instead of showing the raw ACH
+# originator. `recurring: false` marks money that will not come again -- the dashboard says so
+# explicitly, because a one-time settlement read as income is the single easiest way to
+# misjudge a month.
+nonsalary_income_labels:
+  - match: "county ap reimb"
+    label: "Employer travel reimbursement"
+    note: "Out-of-pocket conference travel paid back by the county. One-time -- excluded from the salary-only savings view."
+    recurring: false
+  - match: "state tax refund"
+    label: "State tax refund"
+    note: "Annual refund. Not recurring income."
+    recurring: false
+  - match: "streamco settlement"
+    label: "Class-action settlement"
+    note: "Settlement over undisclosed streaming-plan fees; arrived by direct deposit."
+    recurring: false
+
+# canonical merchant name -> the normalized-name substrings that mean the same storefront. Used by
+# the Merchants tab so one store shows up as one line. Needed where the statement itself truncates
+# or abbreviates the name -- pure case differences are already merged automatically. Matched
+# case-insensitively; first match wins. Prefix a pattern with "=" to require an exact whole-name
+# match instead of a substring (use it for short truncations).
+merchant_aliases:
+  Fourth Street Market: ["fourth st market", "fourth street"]
+  Kroger: ["kroger"]
+  Trader Joe's: ["trader joe"]
+  ALDI: ["aldi"]
+  Lakeview Power & Light: ["lakeview pwr", "lakeview power"]
+  Northline Gas: ["northline gas", "ach northline"]
+  Vantel Fiber: ["vantel"]
+  Mint Mobile: ["mint mobile"]
+  Amazon Prime: ["amazon prime*", "amazon prime"]
+  Spotify: ["spotify usa", "spotify"]
+  Netflix: ["netflix"]
+  Granite State Servicing: ["granite state"]
+  Cornerstone Life: ["cornerstone life"]
+  Lakeview Transit Authority: ["lakeview transit", "lta fare"]
+  Ridgeline Rx: ["ridgeline rx", "ridgeline pharm"]
+  Havenbrook Residential: ["havenbrook"]
+  Lakeview Dental Group: ["lakeview dental"]
+  Target: ["target"]
+  AAA: ["aaa acg"]
+  Lyft: ["lyft"]
+
+# City/state tails the credit-union statement PDFs append to every card-swipe line
+# ("Debit Card DEBIT TRAN FOURTH STREET MARKET LAKEVIEW OH"). Stripped when normalizing a raw
+# description into a merchant name, so a storefront's PDF-era rows group with its CSV-era rows
+# instead of showing up as a second, separate merchant. Matched case-insensitively at the end of
+# the description; add a line when you spend in a new city.
+merchant_location_suffixes:
+  - lakeview oh
+  - riverside oh
+  - columbus oh
+  - cleveland oh
+  - chicago il
+  - cupertino ca
+  - seattle wa
+  - san jose ca
+  - amzn.com/bill wa
+
+# Corner-store forensics. Card statements carry no line items, but a corner store's tickets are tiny
+# and repeat, so the ladder of distinct amounts IS the menu. Nearly every Fourth Street Market
+# ticket lands exactly on a $0.2675 grid = a $0.25 price ladder plus 7% tax, which lets each ticket
+# be read back as a basket. `known_items` are confirmed shelf prices; add more as they are
+# identified and the decoder explains more of the spend.
+deli_decode:
+  merchant: "Fourth Street Market"
+  tax_rate: 0.07
+  price_grid: 0.25
+  known_items:
+    - {name: "Red Bull", price: 3.25}
+    - {name: "Clif Bar", price: 1.75}
+  # The habit has a signature ticket -- the one basket bought over and over. Naming it lets the
+  # decoder count it per month instead of only in aggregate, which is what makes "was this month
+  # lighter than usual?" answerable. Items must appear in known_items above; the pre-tax price is
+  # their sum, and the charged price is that plus tax (3.25 + 1.75 = 5.00 -> $5.35 on the card).
+  signature_combo:
+    label: "Red Bull + Clif Bar"
+    items: ["Red Bull", "Clif Bar"]
+
+# Energy drinks are bought across three channels at wildly different unit prices, so the true cost
+# only shows up when they're pooled. Keywords match Amazon item descriptions.
+energy_drink_keywords: ["red bull", "monster", "celsius", "energy drink"]
+
+# Identified non-recurring costs per month, so the "did spending really rise?" comparison can strip
+# them out. These are specific purchases traced to a receipt, not an estimate -- the apartment
+# furnishing wave and the one-time cat setup. Add a month as new lumpy costs land.
+one_time_costs:
+  May26: 189.99          # Amazon: bed frame
+  Jun26: 1012.74         # Costco.com mattress 631.46, curtains + rods 73.88, Target 101.05, Amazon 116.24 + 90.11
+  Jul26: 294.96          # cat setup: feeder 69.99, fountain 39.99, litter mats 32.51, toy 9.98; shoe bench 42.49; dental 100.00
+
+# keyword -> bucket (case-insensitive substring match against bank/card Description).
+# First matching bucket wins (YAML order = priority). Extend additively as new merchants show up.
+# Anything unmatched falls to "Other".
+categories:
+  venmo:        {tag: var,   keywords: ["transfer to venmo"]}
+  rent:         {tag: fixed, keywords: ["havenbrook", "old rent portal"]}
+  # online/one-time Costco orders and membership fees are shopping, not a grocery run --
+  # must come before `groceries`'s broad "costco" keyword so those don't get miscounted as food.
+  shopping_costco: {tag: onetime, keywords: ["www costco com", "costco *annual", "costco.com"]}
+  fostering:    {tag: care,  keywords: ["chewy"]}   # the cat -- own line, not generic shopping
+  # one-time social events (a cabin weekend, a wedding, a big group trip). Kept out of
+  # "eating out" so a single $210 weekend never distorts the restaurant run-rate.
+  events:       {tag: onetime, keywords: ["venmo cabin weekend", "cabin weekend"]}
+  # fines, violations and collection-agency payments. Worth its own line: it is money that buys
+  # nothing, and a payment plan running quietly for months is exactly what a dashboard should surface.
+  fines:        {tag: onetime, keywords: ["parking violation", "violations", "library fine"]}
+  # snacks & convenience = corner-store runs: an energy drink + a bar, a few dollars at a time.
+  # Kept separate from "eating out" (real meals) so the frequent small-dollar habit is visible on
+  # its own -- this is where the energy-drink spend lives at retail.
+  snacks:       {tag: var,   keywords: ["fourth street market", "fourth st market", "quick stop", "convenience", "express mart", "blue line snacks", "corner deli", "gas & go", "bodega", "deli"]}
+  # groceries = actual grocery stores / markets bought for cooking.
+  groceries:    {tag: var,   keywords: ["venmo fruit stand", "kroger", "trader joe", "aldi", "farmers market", "costco whse", "grocery", "supermarket", "market"]}
+  # food_away = prepared meals: restaurants, fast food, coffee shops, and sit-down takeout.
+  food_away:    {tag: var,   keywords: ["venmo shared meals", "chipotle", "taqueria", "panera", "basil & rye", "golden wok", "pho house", "domino", "cafe", "starbucks", "wendy", "shake shack", "restaurant", "pizza", "grill", "coffee", "doordash", "tst*", "sq *"]}
+  pharmacy:     {tag: fixed, keywords: ["ridgeline"]}
+  # dentist / medical copays (not the recurring mail-order pharmacy).
+  healthcare:   {tag: care,  keywords: ["dental", "dentist", "urgent care", "minuteclinic", "medical", "physician"]}
+  # walk-in drugstores/toiletries -- distinct from the mail-order pharmacy line.
+  drugstore:    {tag: var,   keywords: ["walgreens", "cvs", "rite aid"]}
+  utilities:    {tag: fixed, keywords: ["lakeview power", "lakeview pwr", "northline gas", "vantel", "mint mobile"]}
+  transit:      {tag: onetime, keywords: ["lakeview transit", "lta fare", "amtrak", "lyft", "uber", "lakeview parking", "shell oil", "airline"]}
+  student_loans: {tag: fixed, keywords: ["granite state", "student loan", "dept education"]}
+  # movies, theaters, museums, bookstores, and other culture -- discretionary but not "waste".
+  entertainment: {tag: var, keywords: ["venmo movie tickets", "amc ", "cinema", "corner books", "bandcamp", "museum", "library friends", "theatre", "theater", "books"]}
+  subscriptions: {tag: fixed, keywords: ["spotify", "netflix", "apple.com/bill", "google *google", "amazon prime", "nytimes", "microsoft*", "peloton", "audible", "hulu", "steam"]}
+  insurance:    {tag: fixed, keywords: ["cornerstone life", "lemonade insurance", "life insurance"]}
+  # AAA auto-club / other annual memberships.
+  membership:   {tag: fixed, keywords: ["aaa acg", "aaa "]}
+  web_hosting:  {tag: fixed, keywords: ["bluepine", "domainworks"]}
+  # income tax prep + payments (one-time, seasonal).
+  taxes:        {tag: onetime, keywords: ["turbotax", "tax payment", "irs "]}
+  cash:         {tag: var,   keywords: ["atm withdrawal", "atm cash"]}
+  laundry:      {tag: fixed, keywords: ["laundrycard", "laundry"]}
+  # bank / ATM / transfer fees.
+  fees:         {tag: var,   keywords: ["atm surcharge", "transfer fee", "service fee", "foreign transaction"]}
+  # gym / pool passes -- recreation with a health purpose, kept off the culture line
+  fitness:      {tag: var,   keywords: ["rec center", "aquatics", "fitness", "ymca"]}
+  shopping:     {tag: onetime, keywords: ["amazon", "amzn mktp", "target", "best buy", "ikea", "goodwill", "hardware", "dollar tree"]}
+
+# Human-readable names for the category keys, shown on every tab. Anything not listed here falls
+# back to a generic default in finlib/metrics.py. `family` names the family-support line.
+category_display_names:
+  snacks: "Corner stores, delis & convenience"
+  pharmacy: "Ridgeline Rx (mail-order pharmacy)"
+  membership: "Memberships (AAA)"
+  shopping: "Shopping — Amazon/Target"
+  shopping_costco: "Warehouse club (Costco.com/membership)"
+  fostering: "Cat care (Chewy + Amazon)"
+  fitness: "Gym & fitness"
+  family: "Family support — parents"
+
+# 50/30/20 rollup: which bucket each category counts toward. Categories not listed here fall back
+# to a tag-based default (fixed/care -> needs, var/onetime -> wants). Savings is computed from the
+# reconciliation (saved + automatic retirement), not from a category.
+needs_wants:
+  rent: needs
+  groceries: needs
+  utilities: needs
+  pharmacy: needs
+  drugstore: needs
+  healthcare: needs
+  student_loans: needs
+  insurance: needs
+  transit: needs
+  laundry: needs
+  fees: needs
+  taxes: needs
+  fostering: needs
+  cash: needs
+  web_hosting: needs
+  membership: wants
+  events: wants
+  food_away: wants
+  snacks: wants
+  entertainment: wants
+  fitness: wants
+  fines: wants
+  shopping: wants
+  shopping_costco: wants
+  subscriptions: wants
+  venmo: wants
+  other: wants
+
+# Editable monthly spending targets, in dollars, keyed by category. Shown as target-vs-actual with
+# a variance on the "Where It Goes" tab. Leave a category out to hide its target.
+budgets:
+  rent: 1300
+  food_away: 180
+  snacks: 80
+  groceries: 300
+  shopping: 200
+  entertainment: 60
+  drugstore: 25
+  subscriptions: 75
+  utilities: 180
+  transit: 60
+  cash: 60
+  pharmacy: 120
+
+# Amazon description -> category, case-insensitive substring match, first match wins (YAML order =
+# priority). Order matters: specific buckets (energy_drinks, health, pets) come before broad ones
+# (kitchen, household) so e.g. a "cat food" bowl isn't mislabeled kitchen. Extend additively.
+amazon_categories:
+  energy_drinks: ["red bull", "monster", "celsius", "energy drink"]
+  pets:         ["cat", "litter", "pet", "churu", "friskies", "temptations", "purina", "feeder", "fountain"]
+  health:       ["blood pressure", "thermometer", "supplement", "melatonin", "allergy", "first aid", "vitamin", "toothpaste", "sensodyne", "sunscreen"]
+  grocery:      ["snack", "noodle", "electrolyte", "pretzel", "granola", "oatmeal", "coffee pods", "tea "]
+  toiletries:   ["deodorant", "body wash", "shampoo", "conditioner", "lotion", "moisturizer", "razor", "floss"]
+  clothing:     ["running shoes", "shirt", "sock", "jacket", "sneaker", "boxer brief", "gloves", "scarf", "hoodie"]
+  electronics:  ["hard drive", "cable", "charger", "headphone", "earbud", "power bank", "adapter", "keyboard", "mouse pad", "webcam", "usb"]
+  kitchen:      ["pan", "pot", "knife", "cutting board", "kitchen", "cook", "strainer", "utensil", "skillet", "spatula", "colander", "mixing bowl", "dutch oven", "tumbler", "container", "baking"]
+  home:         ["bed frame", "lamp", "curtain", "storage", "furniture", "shelf", "mattress", "sheet", "duvet", "bedding", "pillow", "rug", "shoe bench", "hanger", "desk"]
+  household:    ["detergent", "cleaning", "paper towel", "trash bag", "dish soap", "wipes", "cleaner", "sponge", "bleach", "toilet paper", "tide", "dawn"]
+  office:       ["pen", "notebook", "journal", "sticky notes", "binder"]
+  books:        ["book", "paperback", "hardcover"]
+
+# Short keywords whose bare substring produces false positives (carpet->pet, locator->cat,
+# panels->pan). These must match as a whole word (optionally plural).
+amazon_whole_word_keywords: ["cat", "pet", "pan", "pot", "rug", "tea"]
+
+# Force specific Amazon items into a category, overriding the keyword map (checked first). Key = ASIN
+# (exact match) or a description substring (case-insensitive); value = category. Use for items whose
+# description has no obvious keyword -- e.g. cat gear that isn't labeled "cat".
+amazon_category_overrides:
+  B0SYN00931: pets   # rug gripper pad -- anchors the litter mats (bought for the cat)
+
+# Chewy item -> cat-care category, case-insensitive substring, first match wins (YAML order =
+# priority). Order matters: litter/health/toys are checked before treats and food so a "catnip toy"
+# lands in toys and a "lickable treat variety pack" lands in treats, not food. `essential: true`
+# marks the recurring necessities (food + litter) that Chewy Autoship discounts 5-35%.
+chewy_categories:
+  litter:  {essential: true,  keywords: ["litter", "scoop away", "fresh step", "clumping", "odor control"]}
+  health:  {essential: true,  keywords: ["flea", "tick", "dewormer", "supplement", "vitamin", "dental", "probiotic"]}
+  toys:    {essential: false, keywords: ["toy", "teaser", "wand", "mouse", "feather", "kicker", "scratcher", "silvervine"]}
+  treats:  {essential: false, keywords: ["churu", "inaba", "temptations", "greenies", "lickable", "treat", "catnip"]}
+  food:    {essential: true,  keywords: ["food", "dry", "canned", "kibble", "pate", "shreds", "gravy", "friskies", "purina", "fancy feast", "variety pack", "recipe"]}
+
+# Net worth ASSETS come from data/balances/balances.csv (account balances) and
+# data/balances/VANGUARD_ACCOUNT_LIST.csv (per-holding detail for allocation). Refresh those
+# CSVs to update. Liabilities and the classification maps below stay here.
+net_worth:
+  liabilities:
+    - name: "Student loan — Granite State Servicing (Direct Sub + Unsub)"
+      balance: 3118.40
+      monthly_payment: 78.20
+      as_of: "2026-07-26"
+
+  # account_type (from balances.csv) -> tax treatment bucket. First matching keyword wins.
+  tax_buckets:
+    roth:    ["roth"]                                    # tax-free growth + withdrawals
+    pretax:  ["pre-tax", "403", "457", "traditional", "dc ", "rollover", "pension", "ira"]  # tax-deferred
+    cash:    ["cash", "bank", "hysa", "checking", "savings"]   # bank/HYSA, no market risk
+    taxable: ["taxable", "brokerage", "individual"]     # taxable brokerage (default for investments)
+    receivable: ["receivable"]                           # money lent out, due back on a date
+
+  # How to split a fund/holding into stocks / bonds / cash. Matched by symbol first, then by
+  # keyword in the holding or account "fund" name. Anything unmatched defaults to 100% stocks.
+  fund_allocation:
+    VFIFX:  {stocks: 0.88, bonds: 0.09, cash: 0.03}      # Vanguard Target Retirement 2050
+    VMFXX:  {cash: 1.0}                                  # Federal Money Market
+    VUSXX:  {cash: 1.0}                                  # Treasury Money Market
+    "null": {cash: 1.0}                                  # Cash Plus / Cash Deposit sweep rows
+  fund_allocation_keywords:                              # for accounts with no per-holding detail
+    - {match: ["target retirement", "2050 fund", "2050 trust", "target-date"], stocks: 0.88, bonds: 0.09, cash: 0.03}
+    - {match: ["state 2050", "balanced"], stocks: 0.70, bonds: 0.30, cash: 0.0}
+    - {match: ["money market", "cash plus", "cash deposit", "bank cash", "savings", "checking", "hysa"], stocks: 0.0, bonds: 0.0, cash: 1.0}
+    # a personal loan carries no market risk, so it sits on the cash side of the stock/bond/cash
+    # split -- it is still kept out of "spendable cash", which is only Cash Plus + the bank
+    - {match: ["principal lent"], stocks: 0.0, bonds: 0.0, cash: 1.0}
+    # anything else (individual stocks, ETFs) -> treated as 100% stocks
+
+# Manual, self-reported -- not derivable from any statement. Drives the coverage-gap
+# callout on the Net Worth tab; update the booleans if this ever changes.
+insurance_coverage:
+  life_insurance: true              # Cornerstone Life policy, tracked in recurring bills
+  health_insurance: "employer_paid" # the county covers 100% of the premium
+  disability_short_term: false
+  disability_long_term: false
+
+# Manual, hand-entered from the issuer's app (Account > Rewards > points activity). Not derivable
+# from the CSV export -- points-earned is not in the transaction data at all. The statements'
+# own rewards blocks (data/cards/*.pdf or statements.json) are the preferred source.
+credit_card_points:
+  monthly: []
+
+# Manual snapshot from a credit-monitoring app -- not pulled automatically (update.py never makes
+# network calls, per docs/DESIGN.md's offline-by-design goal).
+credit_health:
+  as_of: "2026-09-08"
+  score_band: "EXCELLENT"          # the app reports a band, not the exact number
+  scoring_model: "VantageScore 3.0"
+  factors:
+    - name: "Payment History"
+      impact: "HIGH"
+      standing: "EXCELLENT"
+    - name: "Credit Card Utilization"
+      impact: "HIGH"
+      standing: "GOOD"
+    - name: "Derogatory Marks"
+      impact: "HIGH"
+      standing: "EXCELLENT"
+    - name: "Credit History Age"
+      impact: "MEDIUM"
+      standing: "GOOD"
+    - name: "Total Accounts"
+      impact: "LOW"
+      standing: "FAIR"
+    - name: "Hard Inquiries"
+      impact: "LOW"
+      standing: "EXCELLENT"
+
+# The household's own emergency-fund target: a full 12 months of cover, with anything above it
+# held deliberately for liquidity. Drives the safety-net red flag and the runway default. Do NOT
+# replace with a generic 3-6 month rule of thumb -- that would flag an intentional buffer as idle
+# money and point the advice the wrong way.
+emergency_fund_months: 12
+
+# What life costs before any discretionary decision. Drives the "fixed floor" panel -- a monthly
+# total mixes commitments with choices, and separating them answers a more useful question.
+# The pharmacy line is included because it is a standing prescription, not discretionary.
+fixed_floor_categories:
+  [rent, utilities, insurance, student_loans, subscriptions, web_hosting, membership, laundry, pharmacy]
+
+# Chase Freedom's quarterly bonus: 5% (an extra 4%) on up to $1,500 of combined purchases in the
+# rotating categories, but ONLY if activated each quarter. A statement where every point sits on
+# the "1% on all purchases" line means it was never activated.
+freedom_bonus_cap_per_quarter: 1500
+freedom_bonus_uplift: 0.04
+# Activation is an act in the issuer's app; a statement cannot show it until the NEXT statement
+# closes, so a statement-only read keeps nagging about something already done. Record each quarter
+# here -- the flag defers to an entry newer than the statement it read the points off, and then
+# flips to reminding about the FOLLOWING quarter, which is the risk that actually recurs.
+freedom_bonus_activations:
+  "2026Q3": "2026-08-25"    # confirmed by issuer email: "Your 5% cash back is activated."
+
+# Categories the Prime Visa pays more on than the Freedom's flat 1%, per its own statement
+# ("2% back at restaurants", "2% back on local transit/commuting"). Value is the uplift in
+# percentage points. Both currently show 0 points earned, so this spend is all on the 1% card.
+card_reroute_categories:
+  food_away: 1
+  transit: 1
+
+runway:
+  # State maximum weekly unemployment benefit. Re-check each year; states index it to wages.
+  state_unemployment_weekly_max: 583
+  default_burn_presets: [2200, 2600, 3200]
+  default_weeks: 26    # regular state UI is capped at 26 full-rate weeks in a benefit year
+  tax_withholding_pct: 12.5  # optional 10% federal + 2.5% state withholding reserve

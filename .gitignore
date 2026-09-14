@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# rebuilt by `python update.py`; docs/ holds the committed demo build instead
+output/
+
+# never commit real exports: the pipeline reads them from data/, which here holds the
+# generated sample only. Anything matching the real export names is ignored on purpose.
+data/**/*.pdf
+data/**/*.PDF
+data/**/*.docx
+data/**/*.png
+data/**/*.bak*
+*.dpapi
+client_secret*.json

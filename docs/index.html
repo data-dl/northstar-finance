@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Demo of a personal financial command center, running entirely on generated sample data.">
+<title>Northstar Demo</title>
+<style>
+  :root{
+    color-scheme:light;--bg:#f7f6f2;--bg2:#f0eee7;--panel:#fdfcf9;--panel2:#f2f0ea;
+    --line:#e5e1d7;--ink:#1f2630;--muted:#5a6270;--faint:#616975;--mint:#0a6444;
+    --blue:#2551b8;--blue-mark:#2f66e0;--coral:#b52d2d;--amber:#8a6300;--violet:#6a4bb8;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 10px 34px rgba(16,24,40,.07);--r:20px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{margin:0;background:radial-gradient(circle at 84% -10%,rgba(47,109,246,.07),transparent 38%),var(--bg);color:var(--ink);font:16px/1.62 Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+  .suitebar{position:sticky;top:0;z-index:20;border-bottom:1px solid rgba(47,109,246,.14);background:rgba(246,247,249,.88);backdrop-filter:blur(18px)}
+  .suitebar-inner{max-width:1320px;height:66px;margin:auto;padding:0 24px;display:flex;align-items:center;gap:24px}
+  .brand{display:flex;align-items:center;gap:11px;margin-right:auto}
+  .brandmark{width:31px;height:31px;border-radius:10px;background:linear-gradient(135deg,var(--mint),var(--blue));box-shadow:0 0 30px rgba(15,122,82,.2);position:relative}
+  .brandmark:after{content:"";position:absolute;inset:8px;border:2px solid #f0eee7;border-top-color:transparent;border-radius:50%;transform:rotate(24deg)}
+  .brand b{font-size:13px;letter-spacing:.13em;text-transform:uppercase}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+  nav{display:flex;gap:5px;overflow:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+  nav a{white-space:nowrap;color:var(--muted);font-size:13px;font-weight:700;padding:9px 12px;border-radius:10px}
+  nav a:hover,nav a.active{color:var(--ink);background:var(--panel2)}
+  .mask{border:1px solid var(--line);color:var(--muted);background:var(--panel);border-radius:10px;padding:8px 11px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap}
+  main{max-width:1320px;margin:auto;padding:28px 24px 64px}
+  .cockpit{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(290px,.55fr);gap:18px;background:linear-gradient(135deg,#eae7de,#f0eee7 62%,#f2f0ea);border:1px solid var(--line);border-radius:28px;padding:34px;box-shadow:var(--shadow);overflow:hidden;position:relative}
+  .cockpit:before{content:"";position:absolute;width:420px;height:420px;border:1px solid rgba(15,122,82,.09);border-radius:50%;right:-230px;top:-220px;box-shadow:0 0 0 70px rgba(15,122,82,.025),0 0 0 140px rgba(47,109,246,.018)}
+  .eyebrow{color:var(--mint);font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+  h1{font-size:clamp(34px,5vw,64px);line-height:.98;letter-spacing:-.055em;margin:18px 0 14px;max-width:850px}
+  .hero-copy{color:var(--muted);max-width:760px;margin:0;font-size:16px}.hero-copy b{color:var(--ink)}
+  .hero-facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}.hero-facts span{border:1px solid var(--line);background:rgba(15,23,32,.035);color:var(--muted);font-size:12px;padding:8px 11px;border-radius:999px}.hero-facts b{color:var(--ink)}
+  .signal{align-self:center;justify-self:center;width:222px;height:222px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--amber) 0 14%,var(--mint) 14% 82%,rgba(15,23,32,.08) 82%);position:relative;box-shadow:0 0 70px rgba(15,122,82,.08)}
+  .signal:before{content:"";position:absolute;inset:13px;border-radius:50%;background:#f2f0ea;border:1px solid rgba(15,23,32,.08)}
+  .signal div{position:relative;text-align:center}.signal strong{display:block;font-size:39px;letter-spacing:-.05em}.signal span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.11em;margin-top:3px}.signal small{display:block;color:var(--mint);font-size:11px;margin-top:9px}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+  .metric,.panel,.launch{background:linear-gradient(180deg,rgba(246,247,249,.94),rgba(246,247,249,.96));border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+  .metric{padding:20px;min-height:140px}.label{color:var(--muted);font-size:12px;font-weight:750;text-transform:uppercase;letter-spacing:.075em}.metric strong{display:block;font-size:30px;letter-spacing:-.04em;margin:15px 0 5px}.metric small{color:var(--muted);font-size:12px}.metric .delta{display:inline-block;margin-top:10px;border-radius:999px;padding:3px 7px;font-size:11px;font-weight:700}.bad{color:var(--coral)}.good{color:var(--mint)}.watch{color:var(--amber)}.delta.bad{background:rgba(192,38,38,.12)}.delta.good{background:rgba(15,122,82,.1)}
+  .section-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;margin-top:16px}.panel{padding:24px}.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:20px}.panel-head h2{font-size:22px;letter-spacing:-.025em;margin:3px 0 0}.panel-head p{color:var(--muted);font-size:12px;margin:3px 0 0;text-align:right;max-width:280px}
+  .timeline{display:grid;gap:1px}.deadline{display:grid;grid-template-columns:74px 1fr auto;gap:14px;align-items:center;border-top:1px solid var(--line);padding:15px 0}.deadline:first-child{border-top:0;padding-top:0}.deadline:last-child{padding-bottom:0}.deadline time{font-size:12px;color:var(--blue);font-weight:700}.deadline b{font-size:14px}.deadline p{color:var(--muted);font-size:12px;margin:3px 0 0}.deadline strong{font-size:15px;text-align:right}
+  .cash-bridge{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:center;margin-top:7px}.bridge-node{background:var(--panel2);border:1px solid var(--line);border-radius:15px;padding:16px;min-height:104px}.bridge-node span{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}.bridge-node strong{display:block;font-size:23px;margin-top:9px}.bridge-node small{display:block;color:var(--muted);font-size:10px;margin-top:5px}.bridge-arrow{color:var(--faint);font-weight:900}.runway-bars{margin-top:21px;display:grid;gap:13px}.runway-row{display:grid;grid-template-columns:112px 1fr 70px;gap:12px;align-items:center;font-size:12px}.track{height:9px;background:#eae7de;border-radius:99px;overflow:hidden}.track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--blue),var(--mint))}.runway-row b{text-align:right}
+  .drivers{display:grid;gap:10px}.driver{display:grid;grid-template-columns:minmax(150px,1fr) 110px 88px;gap:12px;align-items:center}.driver-name{min-width:0}.driver-name b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.driver-name small{color:var(--muted);font-size:11px}.driver .track i{background:linear-gradient(90deg,var(--coral),var(--amber))}.driver strong{text-align:right;font-size:13px}
+  .guardrails{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.guard{border:1px solid var(--line);background:var(--panel2);border-radius:15px;padding:15px}.guard span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.guard strong{display:block;font-size:24px;margin:9px 0 5px}.guard p{font-size:11px;color:var(--muted);margin:0}.guard em{font-style:normal;font-weight:700}
+  .launches{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}.launch{padding:23px;position:relative;overflow:hidden;transition:transform .18s,border-color .18s}.launch:hover{transform:translateY(-3px);border-color:#cfcabd}.launch .n{color:var(--faint);font-size:11px;font-weight:700}.launch h2{font-size:20px;margin:16px 0 8px}.launch p{color:var(--muted);font-size:13px;margin:0 0 25px;min-height:58px}.launch .go{color:var(--mint);font-size:13px;font-weight:700}.launch:after{content:"→";position:absolute;right:21px;bottom:18px;color:var(--blue);font-size:24px}
+  .audit{margin-top:16px;display:flex;align-items:center;gap:13px;padding:16px 18px;border:1px solid var(--line);border-radius:15px;color:var(--muted);font-size:12px}.audit i{width:9px;height:9px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 5px rgba(15,122,82,.1)}.audit.warn i{background:var(--amber);box-shadow:0 0 0 5px rgba(237,161,0,.1)}.audit b{color:var(--ink)}.audit time{margin-left:auto}.foot{color:var(--faint);font-size:11px;margin-top:20px;line-height:1.7}
+  @media(max-width:980px){.cockpit{grid-template-columns:1fr}.signal{display:none}.metrics{grid-template-columns:repeat(2,1fr)}.section-grid{grid-template-columns:1fr}.launches{grid-template-columns:1fr}.launch p{min-height:0}.suitebar-inner{gap:12px}.brand small{display:none}}
+  .driver.has-drill{cursor:pointer;border-radius:10px;padding:6px 8px;margin:-6px -8px;transition:background .15s}
+  .driver.has-drill:hover,.driver.has-drill:focus-visible{background:var(--panel2);outline:none}
+  .driver.has-drill .driver-name b:before{content:"B8";display:inline-block;margin-right:7px;color:var(--faint);font-size:10px;transition:transform .18s;vertical-align:1px}
+  .driver.has-drill.open .driver-name b:before{transform:rotate(90deg)}
+  .dd-panel{display:none;margin:2px 0 6px;padding:12px 13px;border:1px solid var(--line);border-radius:13px;background:rgba(246,247,249,.6)}
+  .dd-panel.open{display:block}
+  .dd-head{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:700;margin-bottom:9px}
+  .dd-charge{display:grid;grid-template-columns:58px 1fr auto;gap:11px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)}
+  .dd-charge:first-of-type{border-top:0}
+  .dd-date{font-size:11px;color:var(--blue);font-weight:700;white-space:nowrap}
+  .dd-name{font-size:13px;font-weight:700;min-width:0}
+  .dd-name small{display:block;font-weight:500;color:var(--faint);font-size:11px}
+  .dd-name em{display:block;font-style:normal;font-weight:500;color:var(--muted);font-size:11.5px;margin-top:3px;line-height:1.45}
+  .dd-amt{font-size:13px;font-weight:700;white-space:nowrap}
+  .dd-items{list-style:none;margin:2px 0 4px;padding:0 0 0 69px}
+  .dd-items li{display:flex;gap:12px;justify-content:space-between;font-size:12px;color:var(--muted);padding:2px 0}
+  .dd-items li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dd-items li b{color:var(--ink);font-weight:700;white-space:nowrap}
+  .dd-refiled{display:inline-block;margin-top:4px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--violet);background:rgba(109,75,196,.13);padding:2px 7px;border-radius:99px}
+  .dd-partial{display:inline-block;margin-top:4px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--amber);background:rgba(237,161,0,.13);padding:2px 7px;border-radius:99px}
+  .dd-note{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);color:var(--faint);font-size:11.5px;line-height:1.5}
+  @media(max-width:650px){.dd-charge{grid-template-columns:52px 1fr}.dd-amt{grid-column:2;text-align:left}.dd-items{padding-left:52px}}
+  .tally-top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 34px;margin-bottom:6px}
+  .tally-hero strong{display:block;font-size:44px;font-weight:700;letter-spacing:-.3px;line-height:1}
+  .tally-hero small{display:block;color:var(--muted);font-size:13px;margin-top:6px}
+  .tally-cards{display:flex;flex-wrap:wrap;gap:8px}
+  .tally-chip{border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:13px;background:var(--panel2)}
+  .tally-chip b{font-weight:700}
+  .tally-chip span{color:var(--muted)}
+  .tally-list{margin-top:16px;border-top:1px solid var(--line)}
+  .tally-row{display:grid;grid-template-columns:78px 1fr auto;gap:10px 14px;align-items:baseline;
+    padding:11px 0;border-bottom:1px solid var(--line)}
+  .tally-row time{color:var(--muted);font-size:12.5px;white-space:nowrap}
+  .tally-row .m{font-weight:650}
+  .tally-row .c{display:block;color:var(--muted);font-size:12px;font-weight:400}
+  .tally-row b{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .tally-row b.credit{color:var(--mint)}
+  .tally-foot{color:var(--muted);font-size:12.5px;margin:14px 0 0}
+  .tally-ctl{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-top:18px}
+  .tally-seg{display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px}
+  .tally-seg button{border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);
+    padding:5px 12px;border-radius:999px;cursor:pointer}
+  .tally-seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .tally-seg button:focus-visible,.tbtn:focus-visible{outline:2px solid var(--blue-mark);outline-offset:2px}
+  .tally-actions{display:flex;gap:8px}
+  .tbtn{border:1px solid var(--line);background:var(--panel);font:inherit;font-size:12.5px;font-weight:700;
+    color:var(--ink);padding:6px 13px;border-radius:999px;cursor:pointer}
+  .tbtn:hover{background:var(--panel2)}
+  .tally-how{margin-top:12px;padding:14px 16px;background:var(--panel2);border:1px solid var(--line);border-radius:12px}
+  .tally-how p{margin:0 0 8px;font-size:13px;color:var(--muted)}
+  .tally-how p:last-child{margin-bottom:0}
+  .tally-copy{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+  .tally-copy code{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12.5px}
+  .tally-alt b{color:var(--ink)}
+  .tally-sync{display:flex;flex-direction:column;align-items:flex-end;gap:5px;text-align:right}
+  .tally-sync small{color:var(--muted);font-size:12px;max-width:34ch}
+  .cardgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:18px}
+  .cardtile{border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--panel2)}
+  .cardtile .nm{font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:3px}
+  .cardtile .amt{font-size:24px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+  .cardtile .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .cardtile.off{border-style:dashed}
+  .cardtile.off .amt{color:var(--muted)}
+  .cardtile .pill{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.06em;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:2px}
+  .pill.on{background:rgba(23,115,74,.13);color:var(--green,#17734a)}
+  .pill.offp{background:rgba(138,99,0,.14);color:var(--amber-ink,#8a6300)}
+  .tbtn-go{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .tbtn-go:hover{background:#000;color:var(--bg)}
+  .tbtn-go[disabled]{opacity:.55;cursor:progress}
+  .tally-review{margin-top:14px;border:1px solid var(--line);border-left:3px solid var(--amber-ink,#8a6300);
+    border-radius:10px;padding:12px 14px;background:var(--panel2)}
+  .tally-review h4{margin:0 0 6px;font-size:13px;font-weight:700;color:var(--ink)}
+  .tally-review p{margin:0 0 8px;font-size:12.5px;color:var(--muted)}
+  .tally-review li{font-size:12.5px;color:var(--muted);margin-bottom:4px}
+  .tally-review ul{margin:0;padding-left:18px}
+  .tally-review li b{color:var(--ink);font-weight:650}
+  @media(max-width:650px){.tally-row{grid-template-columns:70px 1fr auto}body{font-size:16px}.suitebar-inner{padding:0 14px;height:auto;min-height:62px;flex-wrap:wrap;gap:7px 12px;padding-top:9px;padding-bottom:9px}.brand{width:calc(100% - 90px)}nav{order:3;width:100%}nav a{padding:7px 9px}.mask{position:absolute;right:14px;top:14px}main{padding:16px 14px 44px}.cockpit{padding:24px 20px;border-radius:22px}.metrics{grid-template-columns:1fr 1fr}.metric{padding:16px;min-height:128px}.metric strong{font-size:25px}.section-grid{gap:12px}.panel{padding:19px}.panel-head{display:block}.panel-head p{text-align:left}.deadline{grid-template-columns:63px 1fr}.deadline strong{grid-column:2;text-align:left}.cash-bridge{grid-template-columns:1fr}.bridge-arrow{transform:rotate(90deg);text-align:center}.driver{grid-template-columns:minmax(120px,1fr) 70px}.driver strong{grid-column:2}.driver .track{grid-column:1/-1}.guardrails{grid-template-columns:1fr}.runway-row{grid-template-columns:96px 1fr 58px}.audit{align-items:flex-start;flex-wrap:wrap}.audit time{margin-left:22px}}
+  @media print{.suitebar,.mask{display:none}body{background:#fff;color:#111}.cockpit,.metric,.panel,.launch{box-shadow:none;background:#fff;color:#111;border-color:#bbb}.hero-copy,.metric small,.panel-head p,.deadline p,.bridge-node small,.driver-name small,.guard p,.launch p,.foot{color:#555}}
+
+  .demo-intro{margin-bottom:16px}.demo-intro h2{font-size:22px;letter-spacing:-.025em;margin:6px 0 10px;text-wrap:balance}.demo-intro p{color:var(--muted);margin:0 0 10px;max-width:80ch;font-size:15px}.demo-intro ol{margin:0 0 12px;padding-left:22px;color:var(--muted);font-size:15px;max-width:80ch}.demo-intro li{margin:5px 0}.demo-intro b{color:var(--ink)}.demo-intro .feedback{border-top:1px solid var(--line);padding-top:12px;color:var(--ink);margin-bottom:0}
+  .demo-banner{background:#ff8c1a;color:#1a1200;font:700 14px/1.45 ui-sans-serif,system-ui,"Segoe UI",sans-serif;padding:11px 18px;text-align:center;letter-spacing:.01em;position:relative;z-index:30}
+  .demo-banner a{color:inherit}
+  .demo-banner b{display:inline-block;background:#1a1200;color:#ffd9a8;padding:2px 8px;border-radius:6px;letter-spacing:.12em;font-size:11.5px;margin-right:9px;vertical-align:1px}
+  .demo-chip{display:inline-block;margin-left:8px;background:#ff8c1a;color:#1a1200;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:999px;vertical-align:2px}
+</style>
+</head>
+<body>
+<div class="demo-banner" role="note"><b>SAMPLE DATA</b>Nothing on this page is real. Every balance, transaction, merchant, account and person was generated for a fictional household, as of Sep 12, 2026. <a href="https://github.com/data-dl/northstar-finance">Source and generator on GitHub</a>.</div>
+<div class="suitebar">
+  <div class="suitebar-inner">
+    <a class="brand" href="index.html" aria-label="Financial Command Center home"><span class="brandmark"></span><span><b>Northstar 2.0</b><small>Demo · every number is generated</small></span></a>
+    <nav aria-label="Financial suite">
+      <a class="active" href="index.html">Command center</a>
+      <a href="dashboard.html">Money dashboard</a>
+      <a href="runway.html">Emergency runway</a>
+      <a href="portfolio_gauge.html">Portfolio gauge</a>
+    </nav>
+    <button class="mask" id="maskBtn" type="button" aria-pressed="false">Hide amounts</button>
+  </div>
+</div>
+<main>
+  <section class="panel demo-intro" aria-label="About this demo">
+    <div class="eyebrow">About this demo</div>
+    <h2>A personal-finance command center, running on generated money</h2>
+    <p>Northstar is four linked dashboards on top of a Python pipeline that reads bank statements, card exports,
+       paystubs and Amazon, Chewy and Venmo history, reconciles them against each other (20 integrity checks), and
+       rebuilds these pages. What you are looking at is the same tool pointed at a synthetic household produced by
+       the repository's generator, so nothing here is private and nothing is real.</p>
+    <ol>
+      <li><b>Update spending</b>, just below: the real version reads the card issuer's transaction-alert emails straight from
+          Gmail and keeps a running tally of what has been spent since the last statement. Here it plays back a scripted sync.</li>
+      <li><b>Money dashboard</b> in the top nav: sixteen tabs over two years of statements. <i>This Month</i>, <i>Corner Stores</i>
+          and <i>Points</i> are good places to start.</li>
+      <li><b>Portfolio gauge</b>, then <b>Simulate a trading day</b>: every account reconciled to one balance sheet, with dials for
+          the day's move. The real one pulls live quotes.</li>
+    </ol>
+    <p class="feedback">The code, the data generator and the design notes are at
+       <a href="https://github.com/data-dl/northstar-finance">github.com/data-dl/northstar-finance</a>.</p>
+  </section>
+  <section class="cockpit">
+    <div>
+      <div class="eyebrow">Financial command center · updated <span id="updatedDate">—</span></div>
+      <h1>Your money is strong.<br>The next moves are specific.</h1>
+      <p class="hero-copy">Statement-based net worth is <b class="money" id="heroNet">—</b>, including the <b class="money" id="heroLoan">—</b> friend-loan receivable. It combines account balances dated <b id="balanceRange">—</b>, so it is a reconciled snapshot rather than a single live quote. The current work is to absorb <span id="reviewMonth">the latest month</span>’s spending, clear near-term card statements, collect that receivable, and keep portfolio concentration intentional.</p>
+      <div class="hero-facts"><span><b id="checkCount">—</b> audit checks passed</span><span><b id="coverageMonths">—</b> months reconciled</span><span>Newest recorded activity <b id="newestTx">—</b></span><span id="pendingFact" hidden>Pending, not in history <b class="money" id="pendingAmount">—</b></span></div>
+    </div>
+    <div class="signal"><div><strong id="signalWord">Stable</strong><span>financial posture</span><small id="signalDetail">—</small></div></div>
+  </section>
+
+  <section class="metrics" aria-label="Key financial metrics">
+    <article class="metric"><div class="label"><span id="monthLabel">Latest completed month</span> spending</div><strong class="money" id="monthSpend">—</strong><small id="monthSpendNote">—</small><span class="delta" id="monthSpendDelta">—</span></article>
+    <article class="metric"><div class="label">Salary saved</div><strong id="monthRate">—</strong><small id="monthRateNote">—</small><span class="delta" id="rateDelta">—</span></article>
+    <article class="metric"><div class="label">Net liquid cash</div><strong class="money" id="netCash">—</strong><small>Cash after current card balances</small><span class="delta good" id="cashRunway">—</span></article>
+    <article class="metric"><div class="label">Statement net worth</div><strong class="money" id="netWorth">—</strong><small id="netWorthNote">—</small><span class="delta good" id="debtRatio">—</span></article>
+  </section>
+
+  <section class="section-grid" id="tallySection" hidden>
+    <article class="panel" style="grid-column:1/-1">
+      <header class="panel-head">
+        <div><div class="eyebrow">Live card activity</div><h2 id="tallyHeading">Card spending, right now</h2></div>
+        <div class="tally-sync">
+          <button type="button" class="tbtn tbtn-go" id="tallySync">&#8635; Update spending</button>
+          <small id="tallyLiveMsg"></small>
+        </div>
+      </header>
+      <div class="tally-top">
+        <div class="tally-hero">
+          <strong class="money" id="tallyNet">—</strong>
+          <small id="tallySub">—</small>
+        </div>
+      </div>
+
+      <div class="cardgrid" id="tallyCardGrid"></div>
+
+      <div class="tally-ctl">
+        <div class="tally-seg" id="tallyFilter" role="group" aria-label="Filter by card"></div>
+        <div class="tally-actions">
+          <button type="button" class="tbtn" id="tallyMore" hidden></button>
+          <button type="button" class="tbtn" id="tallyUpdate" aria-expanded="false">Details</button>
+        </div>
+      </div>
+      <div class="tally-how" id="tallyHow" hidden>
+        <p id="tallyPulled"></p>
+        <div id="tallyOffline">
+        <p><b>How the real one works.</b> The card issuer emails an alert for every transaction. The pipeline reads those
+           alerts straight from Gmail (read-only scope), parses card, merchant and amount, cross-checks the subject
+           against the body, de-duplicates against the statements already on file, and parks anything ambiguous
+           (declines, fuel holds, unknown cards) in a review lane instead of guessing.</p>
+        <p><b>In this demo</b> the button plays back a scripted sync with invented alerts, so you can see the tally move.</p>
+        </div>
+      </div>
+      <div class="tally-review" id="tallyReview" hidden></div>
+      <div class="tally-list" id="tallyList"></div>
+      <p class="tally-foot" id="tallyFoot"></p>
+    </article>
+  </section>
+
+  <section class="section-grid">
+    <article class="panel">
+      <header class="panel-head"><div><div class="eyebrow">Next 90 days</div><h2>The dates that deserve attention</h2></div><p>Ordered by deadline. These are reminders, not payment instructions.</p></header>
+      <div class="timeline" id="timeline"></div>
+    </article>
+    <article class="panel">
+      <header class="panel-head"><div><div class="eyebrow">Cash compass</div><h2>Spendable cash, conservatively</h2></div><p>Receivables stay out until paid.</p></header>
+      <div class="cash-bridge">
+        <div class="bridge-node"><span>Liquid cash</span><strong class="money" id="bridgeCash">—</strong><small>Bank and cash accounts</small></div><div class="bridge-arrow">−</div>
+        <div class="bridge-node"><span>Cards</span><strong class="money bad" id="bridgeCards">—</strong><small>Current balances</small></div><div class="bridge-arrow">=</div>
+        <div class="bridge-node"><span>Net liquid</span><strong class="money good" id="bridgeNet">—</strong><small>After current card reserve</small></div>
+      </div>
+      <div class="runway-bars">
+        <div class="runway-row"><span>Full lifestyle</span><div class="track"><i id="fullBar"></i></div><b id="fullRunway">—</b></div>
+        <div class="runway-row"><span>Bare bones</span><div class="track"><i id="bareBar"></i></div><b id="bareRunway">—</b></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="section-grid">
+    <article class="panel">
+      <header class="panel-head"><div><div class="eyebrow"><span id="reviewWindow">Latest completed month</span>, explained</div><h2>The pressure stack</h2></div><p>Category variance versus your prior 12 months.</p></header>
+      <div class="drivers" id="drivers"></div>
+    </article>
+    <article class="panel">
+      <header class="panel-head"><div><div class="eyebrow">Portfolio policy</div><h2>Guardrails before predictions</h2></div><p>Review thresholds—not automatic sell signals.</p></header>
+      <div class="guardrails">
+        <div class="guard"><span>Single-stock sleeve</span><strong id="singleStock">—</strong><p><em id="singleState">—</em> against a 20% review line.</p></div>
+        <div class="guard"><span>Largest company</span><strong id="topHolding">—</strong><p><em id="topState">—</em> against a 10% review line.</p></div>
+        <div class="guard"><span>Cash allocation</span><strong id="cashAllocation">—</strong><p>Liquidity relative to all assets.</p></div>
+        <div class="guard"><span>Unused 457(b)</span><strong class="money" id="taxRoom">—</strong><p>Potential annual tax-advantaged room.</p></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="launches" aria-label="Open a detailed financial tool">
+    <a class="launch" href="dashboard.html"><span class="n">01 · Diagnose</span><h2>Money Dashboard</h2><p>Trace spending, merchants, Amazon orders, subscriptions, paychecks, habits, and the exact reason a month moved.</p><span class="go">Open the ledger</span></a>
+    <a class="launch" href="runway.html"><span class="n">02 · Stress test</span><h2>Emergency Runway</h2><p>Model job-loss scenarios with card obligations, benefits, lifestyle cuts, and the uncertain friend repayment kept separate.</p><span class="go">Run a scenario</span></a>
+    <a class="launch" href="portfolio_gauge.html"><span class="n">03 · Allocate</span><h2>Portfolio Live Gauge</h2><p>Reconcile every account, refresh prices, see tax placement, and test concentration against explicit guardrails.</p><span class="go">Inspect the portfolio</span></a>
+  </section>
+
+  <div class="audit" id="auditStrip"><i></i><span><b id="auditLine">—</b> <span id="auditBasis">Cash flow uses completed statement history; balances disclose their newest and oldest supporting dates.</span></span><time id="generatedAt">—</time></div>
+  <p class="foot">Demo of a private local dashboard, running on generated sample data. Estimates—especially unemployment benefits, taxes, live prices, and future repayments—are planning inputs, not guarantees or individualized investment, tax, or legal advice.</p>
+</main>
+<script src="data.js"></script>
+<script>
+(function(){
+  'use strict';
+  var DATA_OK=!!(window.DASHBOARD_DATA&&window.DASHBOARD_DATA.summary);
+  if(!DATA_OK){
+    document.addEventListener('DOMContentLoaded',function(){
+      var b=document.createElement('div');
+      b.setAttribute('role','alert');
+      b.style.cssText='position:sticky;top:0;z-index:99;background:#b52d2d;color:#fff;'+
+        'padding:14px 18px;font-weight:700;font-size:16px;text-align:center';
+      b.textContent='data.js did not load - every figure below is a placeholder, not your money. '+
+        'Open this file from its own folder, or re-run update.py.';
+      document.body.insertBefore(b,document.body.firstChild);
+    });
+  }
+  function daysSince(iso){
+    if(!iso) return null;
+    var q=String(iso).slice(0,10).split('-'); if(q.length!==3) return null;
+    var then=Date.UTC(+q[0],+q[1]-1,+q[2]), now=DEMO_TODAY;
+    return Math.floor((Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())-then)/86400000);
+  }
+  var DEMO_TODAY=new Date('2026-09-12T12:00:00');
+  var D=window.DASHBOARD_DATA||{}, S=D.summary||{}, M=D.month_review||{}, N=D.net_worth_detail||{}, R=D.runway_inputs||{}, I=D.financial_integrity||{}, V=D.validation||{}, Q=D.data_quality||{};
+  var masked=false;
+  var $=function(id){return document.getElementById(id)};
+  function escHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function rawMoney(n){return '$'+Math.round(Number(n)||0).toLocaleString('en-US')}
+  function money(n){return masked?'$•••,•••':rawMoney(n)}
+  function money2(n){return masked?'$•••.••':'$'+(Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+  function pct(n,d){return (Number(n)||0).toFixed(d==null?1:d)+'%'}
+  function shortDate(s){if(!s)return '—';var d=new Date(s+'T12:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+  function fullDate(s){if(!s)return '—';var d=new Date(s.length===7?s+'-01T12:00:00':s+'T12:00:00');return d.toLocaleDateString('en-US',{month:'short',day:s.length===7?undefined:'numeric',year:'numeric'})}
+  function monthName(s){if(!s)return 'Latest month';return new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'long'})}
+  function set(id,v){var el=$(id);if(el)el.textContent=v}
+  function moneyNodes(){document.querySelectorAll('.money').forEach(function(el){var n=el.getAttribute('data-value');if(n!=null)el.textContent=money(+n)})}
+  function setMoney(id,v){var el=$(id);if(!el)return;el.setAttribute('data-value',Number(v)||0);el.textContent=money(v)}
+  var cards=(N.liabilities||[]).filter(function(x){return x.source_type==='credit_card'});
+  var cardTotal=I.current_card_balances!=null?+I.current_card_balances:cards.reduce(function(a,x){return a+(+x.balance||0)},0);
+  var liquid=I.liquid_cash!=null?+I.liquid_cash:((N.by_tax&&N.by_tax.cash)||R.cash_hysa||0);
+  var netLiquid=I.net_liquid_cash!=null?+I.net_liquid_cash:Math.max(0,liquid-cardTotal);
+  var fullBurn=((R.burn_presets||[])[2])||3400, bareBurn=((R.burn_presets||[])[0])||2200;
+  var fullMonths=netLiquid/fullBurn, bareMonths=netLiquid/bareBurn;
+  var loan=(D.loans_out||[])[0]||{};
+  var con=N.concentration||{};
+  var monthDelta=(+M.spend||0)-(+M.trailing_spend_avg||0);
+  var debtRatio=N.assets_total?N.liabilities_total/N.assets_total*100:0;
+  var cashPct=N.assets_total?liquid/N.assets_total*100:0;
+
+  var reviewName=monthName(M.as_of), balanceRange=(N.as_of_oldest&&N.as_of_oldest!==N.as_of)?fullDate(N.as_of_oldest)+'–'+fullDate(N.as_of):fullDate(N.as_of);
+  set('updatedDate',shortDate(N.as_of||M.as_of)); setMoney('heroNet',I.statement_net_worth!=null?I.statement_net_worth:(N.net_total||S.net_worth)); setMoney('heroLoan',I.receivables!=null?I.receivables:(loan.principal||0));
+  set('balanceRange',balanceRange);set('reviewMonth',reviewName);set('monthLabel',reviewName);set('reviewWindow',reviewName);
+  set('checkCount',(V.passed!=null&&V.total!=null)?V.passed+'/'+V.total:((D._internal&&D._internal.validation_count)||'—'));
+  set('coverageMonths',(D.coverage&&D.coverage.bank&&D.coverage.bank.months)||'—');
+  (function(){
+    var age=daysSince(Q.newest_transaction), lab=shortDate(Q.newest_transaction);
+    if(age!==null&&age>0) lab+=' ('+age+(age===1?' day':' days')+' ago)';
+    set('newestTx',lab);
+    var el=$('newestTx');
+    // 8 days is one full Chase export cycle: past that the picture is drifting.
+    if(el&&age!==null&&age>8) el.style.color=age>21?'var(--coral)':'var(--amber)';
+  })();
+
+  // ---- live card tally, fed by Chase transaction alerts -------------------
+  // Amounts use money2(): a running tally of $3 deli runs is meaningless rounded
+  // to whole dollars. Re-rendered on the mask toggle like every other figure.
+  // Card filter + "show all" live in module state so a mask toggle, which
+  // re-renders everything, does not silently reset what you were looking at.
+  var tallyCard = 'all', tallyExpanded = false, TALLY_PEEK = 8;
+
+  function renderTally(){
+    var A=D.card_alerts||{}, all=A.rows||[];
+    if(!all.length) return;                       // panel stays hidden until alerts exist
+    $('tallySection').hidden=false;
+
+    var cards=A.by_card||[];
+    if(tallyCard!=='all' && !cards.some(function(c){return c.card_id===tallyCard})) tallyCard='all';
+    var rows=all.filter(function(r){return tallyCard==='all'||r.card_id===tallyCard});
+
+    // the hero always reflects what is on screen, so the number and the list agree
+    var spend=0, credits=0;
+    rows.forEach(function(r){ if(r.amount<0) credits-=r.amount; else spend+=r.amount; });
+    var net=spend-credits;
+    var dates=rows.map(function(r){return r.date}).sort();
+
+    $('tallyNet').textContent=money2(net);
+    var n=rows.length, noun=(n===1?'transaction':'transactions');
+    $('tallySub').textContent=n+' '+noun+(dates.length?' since '+shortDate(dates[0]):'')+
+      (credits>0?' · '+money2(credits)+' credited back':'');
+    $('tallyHeading').textContent=(tallyCard==='all')?'Card spending, right now'
+      :('On your '+((cards.filter(function(c){return c.card_id===tallyCard})[0]||{}).card_name||'card'));
+
+    // 'Both' was right for two cards; it is wrong the moment a third is configured
+    $('tallyFilter').innerHTML=[{card_id:'all',card_name:'All cards',count:all.length}]
+      .concat(cards).map(function(c){
+        return '<button type="button" data-card="'+escHtml(c.card_id)+'" aria-pressed="'+
+          (tallyCard===c.card_id)+'">'+escHtml(c.card_name)+' <span>'+c.count+'</span></button>';
+      }).join('');
+
+    // Every configured card gets a tile, reporting or not: a card missing from the
+    // grid is indistinguishable from a card that simply spent nothing.
+    $('tallyCardGrid').innerHTML=(A.cards||[]).map(function(c){
+      var off=!c.alerts_enabled, amt, sub;
+      if(off){
+        amt = c.statement_balance!=null ? money2(c.statement_balance) : '—';
+        sub = c.statement_as_of
+          ? 'Statement balance, '+shortDate(c.statement_as_of)+' · no live alerts'
+          : 'No transaction alerts switched on';
+      } else {
+        amt = money2(c.net);
+        sub = c.count ? (c.count===1?'1 transaction':c.count+' transactions')
+                      : 'Nothing since the last statement';
+      }
+      return '<div class="cardtile'+(off?' off':'')+'">'+
+        '<div class="nm">'+escHtml(c.name)+
+          '<span class="pill '+(off?'offp':'on')+'">'+(off?'not live':'live')+'</span></div>'+
+        '<div class="amt">'+amt+'</div>'+
+        '<div class="sub">'+escHtml(sub)+'</div></div>';
+    }).join('');
+
+    var shown=tallyExpanded?rows:rows.slice(0,TALLY_PEEK);
+    $('tallyList').innerHTML=shown.map(function(r){
+      var when=r.datetime?r.datetime.slice(5,16).replace(' ',' · '):shortDate(r.date);
+      var credit=r.amount<0;
+      return '<div class="tally-row"><time>'+escHtml(when)+'</time>'+
+        '<div><span class="m">'+escHtml(r.merchant)+'</span>'+
+        '<span class="c">'+escHtml(r.card_name)+(credit?' · refund':'')+'</span></div>'+
+        '<b'+(credit?' class="credit"':'')+'>'+(credit?'+':'')+money2(Math.abs(r.amount))+'</b></div>';
+    }).join('');
+
+    var more=$('tallyMore');
+    more.hidden=rows.length<=TALLY_PEEK;
+    more.textContent=tallyExpanded?'Show recent only':('Show all '+rows.length);
+
+    var foot='Not in the reconciled figures above until a statement covers these dates.';
+    if(A.superseded) foot+=' '+A.superseded+' older alert'+(A.superseded===1?'':'s')+
+      ' already appeared on a statement and dropped out.';
+    $('tallyFoot').textContent=foot;
+
+    // Anything the parser refused to count is shown, never dropped: a discarded
+    // alert is indistinguishable from a month with less spending.
+    var rev=A.review||[], revBox=$('tallyReview');
+    revBox.hidden=!rev.length;
+    if(rev.length){
+      revBox.innerHTML='<h4>'+rev.length+' alert'+(rev.length===1?'':'s')+
+        ' not counted, awaiting a look</h4>'+
+        '<p>Held back rather than guessed at, so the total above stays trustworthy.</p><ul>'+
+        rev.slice(0,6).map(function(r){
+          return '<li><b>'+escHtml(r.subject||'(no subject)')+'</b> — '+escHtml(r.reason)+'</li>';
+        }).join('')+'</ul>'+
+        (rev.length>6?'<p style="margin:8px 0 0">…and '+(rev.length-6)+' more in data/alerts/review.json</p>':'');
+    }
+
+    $('tallyPulled').textContent=A.ingested_at
+      ? ('Alerts last pulled from Gmail on '+A.ingested_at+' (in the demo, a scripted sample rather than a live mailbox).')
+      : 'No record of when alerts were last pulled.';
+  }
+  renderTally();
+
+  // ---- alert panel controls ------------------------------------------------
+  $('tallyFilter').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-card]'); if(!b) return;
+    tallyCard=b.getAttribute('data-card'); tallyExpanded=false; renderTally();
+  });
+  $('tallyMore').addEventListener('click',function(){ tallyExpanded=!tallyExpanded; renderTally(); });
+  $('tallyUpdate').addEventListener('click',function(){
+    var how=$('tallyHow'), open=how.hidden;
+    how.hidden=!open; this.setAttribute('aria-expanded',String(open));
+  });
+  // ---- demo sync: a scripted stand-in for the Gmail fetch -------------------
+  // The real page asks a local server to read Gmail and rebuild. A hosted demo
+  // has neither, so the button plays back invented alerts and re-renders the tally.
+  (function(){
+    var btn=$('tallySync'), msg=$('tallyLiveMsg');
+    msg.textContent='Demo: plays back a scripted sync with invented alerts.';
+    var POOL=[['FOURTH STREET MARKET',5.35,'4417'],['LAKEVIEW TRANSIT AUTH',2.75,'4417'],['AMAZON.COM*7R2WQ1M',18.49,'8802'],
+              ['STARBUCKS #22910',6.85,'4417'],['KROGER #445',31.06,'4417'],['CHEWY.COM',26.49,'4417'],['LYFT *RIDE MON 6PM',11.30,'4417'],
+              ['CORNER BOOKS LAKEVIEW',17.50,'4417'],['SUNFIRE TAQUERIA',14.20,'4417'],['TRADER JOE\'S #712',27.83,'4417']];
+    var TIMES=['08:12','12:41','18:07','20:26'];
+    var round=0;
+    btn.addEventListener('click',function(){
+      btn.disabled=true; btn.textContent='Checking…';
+      msg.textContent='Reading Gmail and rebuilding… (simulated)';
+      setTimeout(function(){
+        var A=D.card_alerts;
+        if(!A||!A.rows){ btn.disabled=false; btn.textContent='↻ Update spending'; return; }
+        var n=2+(round%2), day=12+Math.floor(round/2), date='2026-09-'+String(day).padStart(2,'0');
+        for(var i=0;i<n;i++){
+          var p=POOL[(round*3+i)%POOL.length];
+          A.rows.unshift({alert_id:'demo'+round+'_'+i, datetime:date+' '+TIMES[(round+i)%TIMES.length], date:date, card_id:p[2],
+            card_name:(p[2]==='4417'?'Chase Freedom':'Chase Prime Visa'), merchant:p[0], amount:p[1], kind:'purchase'});
+        }
+        (A.by_card||[]).forEach(function(c){
+          var rs=A.rows.filter(function(r){return r.card_id===c.card_id});
+          c.count=rs.length; c.net=+rs.reduce(function(a,r){return a+r.amount},0).toFixed(2);
+        });
+        (A.cards||[]).forEach(function(c){
+          if(!c.alerts_enabled) return;
+          var rs=A.rows.filter(function(r){return r.card_id===c.card_id});
+          c.count=rs.length; c.net=+rs.reduce(function(a,r){return a+r.amount},0).toFixed(2);
+        });
+        A.count=A.rows.length; A.newest=date; A.ingested_at=date+' '+TIMES[(round+1)%TIMES.length];
+        round++;
+        renderTally();
+        msg.textContent=n+' new, '+A.rows.length+' on file, '+((A.review||[]).length)+' needing review. Rebuilt. (Simulated: these alerts are invented.)';
+        btn.disabled=false; btn.textContent='↻ Update spending';
+      },1400);
+    });
+  })();
+
+  if((Q.pending_manual_count||0)>0){$('pendingFact').hidden=false;setMoney('pendingAmount',Q.pending_manual_total||0)}
+  set('signalWord',fullMonths>=9&&debtRatio<10?'Stable':(fullMonths>=6?'Watch':'Tight'));
+  set('signalDetail',fullMonths>=9?'Liquidity is the shock absorber':(fullMonths>=6?'Protect the cash buffer':'Rebuild spendable reserves'));
+  setMoney('monthSpend',M.spend); set('monthSpendNote','Usual month '+money(M.trailing_spend_avg)); set('monthSpendDelta',(monthDelta>=0?'+':'−')+money(Math.abs(monthDelta))+' vs usual');$('monthSpendDelta').className='delta '+(monthDelta>0?'bad':'good');
+  var rateGap=(+M.rate_salary||0)-(+M.trailing_rate_salary_avg||0);set('monthRate',pct(M.rate_salary,1)); set('monthRateNote','12-month norm '+pct(M.trailing_rate_salary_avg,1));set('rateDelta',(rateGap>=0?'+':'−')+Math.abs(rateGap).toFixed(1)+' pts vs norm');$('rateDelta').className='delta '+(rateGap>=0?'good':'bad');
+  setMoney('netCash',netLiquid); set('cashRunway',fullMonths.toFixed(1)+' months at full burn');
+  setMoney('netWorth',I.statement_net_worth!=null?I.statement_net_worth:(N.net_total||S.net_worth)); set('netWorthNote','Assets '+money(N.assets_total)+' including '+money(I.receivables!=null?I.receivables:(loan.principal||0))+' receivable · liabilities '+money(N.liabilities_total)); set('debtRatio',pct(debtRatio,1)+' debt-to-assets');
+  setMoney('bridgeCash',liquid);setMoney('bridgeCards',cardTotal);setMoney('bridgeNet',netLiquid);
+  set('fullRunway',fullMonths.toFixed(1)+' mo');set('bareRunway',bareMonths.toFixed(1)+' mo');$('fullBar').style.width=Math.min(100,fullMonths/18*100)+'%';$('bareBar').style.width=Math.min(100,bareMonths/18*100)+'%';
+  set('singleStock',pct(con.single_stock_pct_assets,1));set('singleState',con.single_stock_pct_assets>20?'Review':'Within range');$('singleState').className=con.single_stock_pct_assets>20?'watch':'good';
+  set('topHolding',(con.top_symbol||'—')+' · '+pct(con.top_pct_assets,1));set('topState',con.top_pct_assets>10?'Just above':'Within range');$('topState').className=con.top_pct_assets>10?'watch':'good';
+  set('cashAllocation',pct(cashPct,1));setMoney('taxRoom',D.deferral_math&&D.deferral_math.cap_457b);
+
+  var deadlines=[];
+  var todayKey=DEMO_TODAY.toISOString().slice(0,10);
+  cards.forEach(function(c){var overdue=c.due_date&&c.due_date<todayKey;var note;if(overdue&&c.autopay){note='Due date has passed and this card is on autopay, so it should already be settled. It clears from the board at the next statement download.';}else if(overdue){note='Due date has passed; refresh the card snapshot and confirm payment.';}else if(c.autopay){note='Statement balance due. Autopay is on — the check is that the cash is there, not that you remember.';}else{note='Statement balance due; confirm autopay and available cash.';}deadlines.push({date:c.due_date,title:c.name.replace(/ x\d+$/,''),note:note,amount:c.statement_balance||c.balance})});
+  if(loan.due)deadlines.push({date:loan.due,title:'Friend repayment expected',note:'Receivable stays outside emergency cash until it lands.',amount:loan.principal});
+  if(D.insurance_coverage&&!D.insurance_coverage.disability_long_term)deadlines.push({date:'2026-12-01',title:'Disability coverage review',note:'No short- or long-term disability coverage is recorded.',amount:null});
+  deadlines.sort(function(a,b){return String(a.date).localeCompare(String(b.date))});
+  $('timeline').innerHTML=deadlines.map(function(x){return '<div class="deadline"><time>'+shortDate(x.date)+'</time><div><b>'+x.title+'</b><p>'+x.note+'</p></div><strong class="num '+(x.title.indexOf('repayment')>=0?'good':'')+'">'+(x.amount==null?'Review':money(x.amount))+'</strong></div>'}).join('');
+
+  var ups=(M.cat_deltas||[]).filter(function(x){return x.delta>0}).slice(0,5), max=Math.max.apply(null,ups.map(function(x){return x.delta}).concat([1]));
+  $('drivers').innerHTML=ups.map(function(x){return '<div class="driver" data-key="'+(x.key||'')+'"><div class="driver-name"><b>'+x.name+'</b><small>'+money(x.amount)+' this month · '+money(x.avg)+' usual</small></div><div class="track"><i style="width:'+Math.max(5,x.delta/max*100)+'%"></i></div><strong class="bad">+'+money(x.delta)+'</strong></div>'}).join('');
+  var allPassed=V.total!=null&&V.passed===V.total;set('auditLine',V.total!=null?(V.passed+'/'+V.total+' automated integrity checks '+(allPassed?'passed.':'passing.')):'Integrity results unavailable.');$('auditStrip').classList.toggle('warn',!allPassed);set('auditBasis','Cash flow uses completed statement history; balance sheet spans '+balanceRange+'.'+((Q.pending_manual_count||0)>0?' '+money(Q.pending_manual_total)+' of newer self-reported activity is tracked separately until it appears in a statement.':''));set('generatedAt','Built '+new Date(D.generated_at).toLocaleString());
+
+
+  // ---- pressure-stack drill-down -------------------------------------------------
+  // The variance bars say a category ran hot; a bar you cannot open is a claim you cannot check.
+  // Clicking a row lists every charge inside it, and where a receipt exists the charge opens
+  // again into its line items -- Amazon order history matched back onto the card charge that paid
+  // it. Merchants whose contents only live in email carry that note; an in-store swipe with no
+  // receipt anywhere says so plainly rather than quietly disappearing from the total.
+  (function(){
+    var packs = (D.month_review && D.month_review.month_purchases) || [];
+    if(!packs.length) return;
+    var byKey = {};
+    packs.forEach(function(p){ byKey[p.key] = p; });
+
+    function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function dayLabel(iso){
+      var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var p=String(iso).split('-'); return M[+p[1]-1]+' '+(+p[2]);
+    }
+
+    function chargeHtml(ch){
+      var head = '<div class="dd-charge">'+
+        '<span class="dd-date">'+dayLabel(ch.date)+'</span>'+
+        '<span class="dd-name">'+esc(ch.merchant)+
+          (ch.ref?'<small>ref '+esc(ch.ref)+'</small>':'')+
+          (ch.refiled_from?'<span class="dd-refiled">moved here from '+esc(ch.refiled_from)+'</span>':'')+
+          (ch.partial?'<span class="dd-partial">partly recalled</span>':'')+
+          (ch.note?'<em>'+esc(ch.note)+'</em>':'')+
+        '</span>'+
+        '<span class="dd-amt num">'+money2(ch.amount)+'</span></div>';
+      if(!ch.items || !ch.items.length) return head;
+      return head + '<ul class="dd-items">' + ch.items.map(function(i){
+        return '<li><span>'+esc(i.description)+'</span><b class="num">'+money2(i.amount)+'</b></li>';
+      }).join('') + '</ul>';
+    }
+
+    document.querySelectorAll('.driver').forEach(function(row){
+      var key = row.getAttribute('data-key');
+      var pack = key && byKey[key];
+      if(!pack) return;
+      row.classList.add('has-drill');
+      row.setAttribute('tabindex','0');
+      row.setAttribute('role','button');
+      row.setAttribute('aria-expanded','false');
+
+      var panel = document.createElement('div');
+      panel.className = 'dd-panel';
+      var moved = (pack.moved_out||[]).length
+        ? '<div class="dd-note">'+pack.moved_out.map(function(m){
+            return money2(m.amount)+' at '+esc(m.merchant)+' on '+dayLabel(m.date)+
+                   ' now sits under <b>'+esc(m.to)+'</b> — '+esc(m.note);
+          }).join(' ')+'</div>'
+        : '';
+      var unmatched = (pack.unmatched_items||[]).length
+        ? '<div class="dd-note">'+pack.unmatched_items.length+' more Amazon item'+
+          (pack.unmatched_items.length===1?'':'s')+' ordered this month could not be tied to a '+
+          'specific charge — Amazon splits shipments across postings: '+
+          pack.unmatched_items.map(function(i){return esc(i.description.slice(0,44));}).join('; ')+'.</div>'
+        : '';
+      panel.innerHTML =
+        '<div class="dd-head">'+pack.count+' charge'+(pack.count===1?'':'s')+' · '+money2(pack.total)+
+          (pack.itemized?(' · '+pack.itemized+' opened to the item'):'')+'</div>'+
+        pack.charges.map(chargeHtml).join('') + moved + unmatched;
+      row.insertAdjacentElement('afterend', panel);
+
+      function toggle(){
+        var open = panel.classList.toggle('open');
+        row.setAttribute('aria-expanded', open ? 'true' : 'false');
+        row.classList.toggle('open', open);
+      }
+      row.addEventListener('click', toggle);
+      row.addEventListener('keydown', function(e){
+        if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); }
+      });
+    });
+  })();
+
+  $('maskBtn').addEventListener('click',function(){masked=!masked;this.setAttribute('aria-pressed',String(masked));this.textContent=masked?'Show amounts':'Hide amounts';moneyNodes();renderMaskedText()});
+  function renderMaskedText(){
+    renderTally();
+    set('monthSpendNote','Usual month '+money(M.trailing_spend_avg));set('netWorthNote','Assets '+money(N.assets_total)+' including '+money(I.receivables!=null?I.receivables:(loan.principal||0))+' receivable · liabilities '+money(N.liabilities_total));
+    set('monthSpendDelta',(monthDelta>=0?'+':'−')+money(Math.abs(monthDelta))+' vs usual');
+    document.querySelectorAll('.deadline strong.num').forEach(function(el,i){var x=deadlines[i];el.textContent=x&&x.amount!=null?money(x.amount):'Review'});
+    $('drivers').querySelectorAll('.driver').forEach(function(el,i){var x=ups[i];el.querySelector('small').textContent=money(x.amount)+' this month · '+money(x.avg)+' usual';el.querySelector('strong').textContent='+'+money(x.delta)});
+  }
+})();
+</script>
+</body>
+</html>

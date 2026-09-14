@@ -1,0 +1,58 @@
+[
+  {
+    "card_id": "4417",
+    "statement_date": "2026-08-19",
+    "statement_balance": 1198.85,
+    "minimum_payment": 41.96,
+    "due_date": "2026-09-16",
+    "points": {
+      "previous": 8412,
+      "redeemed": 0,
+      "total": 9611,
+      "earn_lines": [
+        {
+          "label": "1% (1 Pt)/$1 earned on all purchases",
+          "points": 1199
+        }
+      ]
+    }
+  },
+  {
+    "card_id": "8802",
+    "statement_date": "2026-08-10",
+    "statement_balance": 504.8,
+    "minimum_payment": 25.0,
+    "due_date": "2026-09-07",
+    "points": {
+      "previous": 2905,
+      "redeemed": 0,
+      "total": 4566,
+      "earn_lines": [
+        {
+          "label": "5% back on Amazon.com purchases",
+          "points": 1445
+        },
+        {
+          "label": "5% back on Whole Foods Market purchases",
+          "points": 0
+        },
+        {
+          "label": "2% back at gas stations",
+          "points": 0
+        },
+        {
+          "label": "2% back at restaurants",
+          "points": 0
+        },
+        {
+          "label": "2% back on local transit/commuting",
+          "points": 0
+        },
+        {
+          "label": "1% back on all other purchases",
+          "points": 216
+        }
+      ]
+    }
+  }
+]

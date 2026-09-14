@@ -1,0 +1,21 @@
+{
+  "seed": 20260912,
+  "as_of": "2026-09-12",
+  "bank_rows": 1788,
+  "card_rows": {
+    "4417": 671,
+    "8802": 217
+  },
+  "amazon_items": 93,
+  "venmo_rows": 273,
+  "chewy_orders": 9,
+  "alerts": 21,
+  "card_current_balances": {
+    "4417": 1734.07,
+    "8802": 605.96
+  },
+  "statement_balances": {
+    "4417": 1198.85,
+    "8802": 504.8
+  }
+}

@@ -1,0 +1,2842 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Money Dashboard — Sample Data</title>
+<style>
+  :root{
+    --ink:#f7f6f2;--panel:#fdfcf9;--panel-2:#f2f0ea;--panel-3:#eae7de;--line:#e5e1d7;
+    --paper:#1f2630;--muted:#5a6270;--faint:#616975;
+    --green:#006300;--amber:#8a6300;--coral:#b52d2d;--gold:#7d5a00;--blue:#2551b8;--violet:#6a4bb8;
+    /* --amber reads as text (5.9:1); bar fills use the validated mark hue instead */
+    --amber-mark:#e39c07;--blue-mark:#2f66e0;--green-mark:#17734a;--coral-mark:#b52d2d;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 4px 16px rgba(16,24,40,.05);
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;color-scheme:light}
+  body{margin:0;background:var(--ink);color:var(--paper);
+    font-family:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+    font-size:18px;line-height:1.68;letter-spacing:0}
+  .num{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+  .wrap{max-width:960px;margin:0 auto;padding:0 18px}
+
+  /* masthead */
+  header.top{padding:40px 0 18px}
+  .eyebrow{font-size:13px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  header.top h1{font-size:clamp(32px,6vw,50px);line-height:1.02;margin:.3em 0 .1em;font-weight:700;letter-spacing:-.3px}
+  header.top .sub{color:var(--muted);font-size:17px;max-width:60ch;margin:0}
+
+  /* sticky tabs */
+  .tabbar{position:sticky;top:0;z-index:30;background:rgba(246,247,249,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);margin-bottom:6px}
+  .tabs{display:flex;gap:4px;overflow-x:auto;max-width:960px;margin:0 auto;padding:8px 14px;-webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:var(--faint) transparent}
+  .tabs::-webkit-scrollbar{height:5px}.tabs::-webkit-scrollbar-track{background:transparent}
+  .tabs::-webkit-scrollbar-thumb{background:var(--faint);border-radius:999px}
+  .tab{flex:0 0 auto;background:transparent;border:0;color:var(--muted);font:inherit;font-size:16px;font-weight:700;
+    padding:11px 16px;border-radius:10px;cursor:pointer;white-space:nowrap;letter-spacing:.01em;scroll-snap-align:start}
+  .tab:hover{color:var(--paper);background:var(--panel)}
+  .tab[aria-selected="true"]{color:var(--ink);background:var(--paper)}
+  .tab:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+  .panel{display:none;padding:26px 0 70px;animation:fade .35s ease}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.panel{animation:none}}
+
+  h2.sec{font-size:26px;font-weight:700;margin:0 0 4px;letter-spacing:-.3px}
+  .lede{color:var(--muted);font-size:17px;margin:0 0 22px;max-width:68ch}
+  h3.sub{font-size:14px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:34px 0 12px}
+
+  /* hero */
+  .hero{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 26px}
+  .hero .big{font-size:clamp(54px,13vw,104px);font-weight:750;line-height:.86;letter-spacing:-1.5px;color:var(--green)}
+  .hero .unit{color:var(--muted);font-size:19px;font-weight:600;padding-bottom:12px;max-width:24ch}
+  .note{color:var(--muted);font-size:17px;margin:16px 0 0;max-width:66ch}.note b{color:var(--paper)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:22px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+  .stat .k{font-size:12.5px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;font-weight:700}
+  .stat .v{font-size:27px;font-weight:700;margin-top:4px;letter-spacing:-.5px}
+  .stat .v small{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:0}
+
+  /* insight callout */
+  .insight{display:flex;gap:14px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);
+    border-radius:12px;padding:16px 18px;margin:16px 0}
+  .insight.good{border-left-color:var(--green)}.insight.warn{border-left-color:var(--amber)}
+  .insight.care{border-left-color:var(--violet)}.insight.win{border-left-color:var(--green)}
+  .insight .ic{font-size:22px;line-height:1.2;flex:0 0 auto}
+  .insight p{margin:0;font-size:16.5px;color:var(--paper)}.insight p b{font-weight:700}
+  .insight .h{display:block;font-weight:700;margin-bottom:2px}
+
+  /* bar rows */
+  .chart{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:6px 20px;box-shadow:var(--shadow)}
+  .row{padding:14px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}
+  .row .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .row .lab{font-weight:600;font-size:17.5px}
+  .row .lab .tag{display:inline-block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:7px;vertical-align:middle}
+  .tag.fixed{background:rgba(47,109,246,.15);color:var(--blue)}
+  .tag.onetime{background:rgba(237,161,0,.16);color:var(--amber)}
+  .tag.care{background:rgba(109,75,196,.18);color:var(--violet)}
+  .tag.var{background:rgba(91,102,114,.14);color:var(--muted)}
+  .row .val{font-size:20px;font-weight:700;white-space:nowrap}.row .val .mut{color:var(--muted);font-size:13px;font-weight:600}
+  .track{height:13px;background:var(--panel-2);border-radius:999px;overflow:hidden;margin-top:8px}
+  .bar{height:100%;width:0;border-radius:999px;transition:width .9s cubic-bezier(.2,.7,.2,1)}
+  .bar.g{background:linear-gradient(90deg,#0e5c38,var(--green-mark))}.bar.b{background:linear-gradient(90deg,#1f52c9,var(--blue-mark))}
+  .bar.a{background:linear-gradient(90deg,#c08600,var(--amber-mark))}.bar.c{background:linear-gradient(90deg,#9c1c1c,var(--coral))}
+  .bar.v{background:linear-gradient(90deg,#553a9e,var(--violet))}
+  @media (prefers-reduced-motion:reduce){.bar{transition:none}}
+
+  /* paired duo bars */
+  .pair{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .miniwrap{display:flex;align-items:center;gap:10px}
+  .mtag{width:44px;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;flex:0 0 44px}
+  .mtrack{flex:1;height:11px;background:var(--panel-2);border-radius:999px;overflow:hidden}
+  .mval{width:60px;text-align:right;font-size:13.5px;font-weight:700;flex:0 0 60px}
+
+  /* svg trend */
+  .svgwrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 14px 8px;box-shadow:var(--shadow)}
+  svg{display:block;width:100%;height:auto}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin:12px 4px 0;font-size:14px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:12px;height:12px;border-radius:3px;display:inline-block;box-shadow:inset 0 0 0 1px rgba(15,23,32,.22)}
+
+  /* cooking flip */
+  .flip{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:560px){.flip{grid-template-columns:1fr}}
+  .col{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .col.before{border-top:3px solid var(--coral)}.col.after{border-top:3px solid var(--green)}
+  .col .cap{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .col .ln{display:flex;justify-content:space-between;margin-top:10px;font-size:16px}.col .ln b{font-weight:700}
+  .col .tot{border-top:1px solid var(--line);margin-top:10px;padding-top:10px;font-weight:700}
+
+  /* recurring table */
+  .rtable{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+  .rt{display:grid;grid-template-columns:1fr auto;gap:4px 16px;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .rt:last-child{border-bottom:0}.rt .n{font-weight:700;font-size:17px}
+  .rt .amt{font-weight:700;font-size:18px;text-align:right;white-space:nowrap}
+  .rt .d{grid-column:1/2;color:var(--muted);font-size:14.5px}
+  .rt.sum{background:var(--panel-2)}.rt.sum .n,.rt.sum .amt{color:var(--green)}
+
+  /* action plan */
+  .act{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:14px;display:grid;grid-template-columns:auto 1fr auto;gap:4px 16px;align-items:start}
+  .act .rank{grid-row:1/3;font-size:30px;font-weight:700;color:var(--faint);width:42px;text-align:center}
+  .act .h{font-size:19px;font-weight:700}
+  .act .d{grid-column:2/3;color:var(--muted);font-size:16px;margin:2px 0 0}
+  .act .save{grid-row:1/3;grid-column:3/4;text-align:right;align-self:center;min-width:96px}
+  .act .save .n{font-size:23px;font-weight:700;color:var(--green);letter-spacing:-.5px}
+  .act .save .u{font-size:11px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;font-weight:700}
+  .act.safety .save .n{color:var(--blue)}.act.house .save .n{color:var(--muted)}
+  @media(max-width:560px){
+    .act{grid-template-columns:auto minmax(0,1fr);padding:16px 14px;gap:4px 10px}
+    .act .rank{width:30px}
+    .act .d{grid-column:2/3}
+    .act .save{grid-row:auto;grid-column:2/3;text-align:left;min-width:0;margin-top:8px}
+    .act .save .n{font-size:21px}
+  }
+
+  .foot{color:var(--faint);font-size:13.5px;margin:10px 0 50px;line-height:1.7;border-top:1px solid var(--line);padding-top:18px}
+  .foot b{color:var(--muted)}
+  :focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:6px}
+
+  /* class chips (needs/wants) + variance */
+  .tag.needs{background:rgba(19,122,75,.15);color:var(--green)}
+  .tag.wants{background:rgba(237,161,0,.16);color:var(--amber)}
+  .over{color:var(--coral);font-weight:700}.under{color:var(--green);font-weight:700}
+
+  /* momentum chips on summary tiles */
+  .trendchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;letter-spacing:.02em;
+    margin-top:7px;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .trendchip.up-bad,.trendchip.down-bad{background:rgba(192,38,38,.14);color:var(--coral)}
+  .trendchip.up-good,.trendchip.down-good{background:rgba(19,122,75,.14);color:var(--green)}
+  .trendchip.flat{background:rgba(91,102,114,.12);color:var(--muted)}
+
+  /* recurring: cadence chips, ended rows, price-creep marker */
+  .cad{display:inline-block;font-size:10px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;
+    padding:2px 7px;border-radius:999px;margin-left:8px;vertical-align:middle;background:rgba(47,109,246,.13);color:var(--blue)}
+  .cad.annual{background:rgba(109,75,196,.16);color:var(--violet)}
+  .cad.quarterly{background:rgba(169,123,0,.14);color:var(--gold)}
+  .cad.maybe{background:rgba(91,102,114,.13);color:var(--muted)}
+  .rt.ended{opacity:.5}
+  .rt.ended .n{text-decoration:line-through;text-decoration-thickness:1px;text-decoration-color:var(--faint)}
+  .creepnote{color:var(--coral);font-weight:700}
+
+  /* 12-month sparkline bars inside category drill-downs */
+  .spark{display:flex;align-items:flex-end;gap:3px;height:42px;margin:10px 2px 2px}
+  .spark i{flex:1;min-height:2px;border-radius:2px 2px 0 0;background:var(--faint);opacity:.85}
+  .spark i.hi{opacity:1}
+  .sparkcap{display:flex;justify-content:space-between;font-size:11.5px;color:var(--faint);margin:4px 2px 8px}
+  /* expandable category rows */
+  .row.exp{cursor:pointer}
+  .row.exp .lab::before{content:"▸";display:inline-block;margin-right:8px;color:var(--faint);transition:transform .2s;font-size:13px}
+  .row.exp.open .lab::before{transform:rotate(90deg)}
+  .drill{display:none;margin:6px 0 2px;padding:8px 0 4px;border-top:1px dashed var(--line)}
+  .row.exp.open .drill{display:block}
+  .drill .m{display:flex;justify-content:space-between;gap:10px;padding:5px 2px;font-size:15px;color:var(--muted)}
+  .drill .m .mn{color:var(--paper)}.drill .m .mc{color:var(--faint);font-size:13px}
+  .budgetline{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:13.5px;color:var(--muted)}
+  .budgetline .bt{flex:1;height:9px;background:var(--panel-2);border-radius:999px;overflow:hidden;position:relative}
+  .budgetline .bt .fill{height:100%;border-radius:999px}
+  .budgetline .bt .mark{position:absolute;top:-3px;width:2px;height:15px;background:var(--paper);opacity:.6}
+
+  /* 50/30/20 stacked bar */
+  .stackbar{display:flex;height:38px;border-radius:10px;overflow:hidden;margin:14px 0 8px;border:1px solid var(--line)}
+  .stackbar .seg{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--ink);min-width:0;white-space:nowrap}
+  .seg.needs{background:var(--green-mark)}.seg.wants{background:var(--amber)}.seg.sav{background:var(--blue)}
+  .cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  .cmp .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .cmp .box .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+  .cmp .box .big2{font-size:30px;font-weight:700;letter-spacing:-1px;margin-top:3px}
+  .cmp .box .tgt{font-size:13px;color:var(--faint);margin-top:4px}
+  @media(max-width:560px){.cmp{grid-template-columns:1fr}}
+
+  /* ===== red flags (professional audit) ===== */
+  .scorebar{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 20px}
+  .scorepill{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+  .scorepill .dot2{width:11px;height:11px;border-radius:50%}
+  .scorepill .n2{font-size:24px;font-weight:700;letter-spacing:-.5px}
+  .scorepill .l2{font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+  .sev-high .dot2,.dot-high{background:var(--coral)}.sev-med .dot2,.dot-med{background:var(--amber)}.sev-low .dot2,.dot-low{background:var(--blue)}
+
+  .flagcard{display:grid;grid-template-columns:auto 1fr auto;gap:4px 16px;align-items:start;
+    background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:12px}
+  .flagcard.sev-high{border-left-color:var(--coral)}.flagcard.sev-med{border-left-color:var(--amber)}.flagcard.sev-low{border-left-color:var(--blue)}
+  .flagcard .badge{grid-row:1/3;align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    padding:5px 9px;border-radius:7px;white-space:nowrap;min-width:64px;text-align:center}
+  .sev-high .badge{background:rgba(192,38,38,.16);color:var(--coral)}
+  .sev-med .badge{background:rgba(237,161,0,.16);color:var(--amber)}
+  .sev-low .badge{background:rgba(47,109,246,.15);color:var(--blue)}
+  .flagcard .ft{font-size:18px;font-weight:700;letter-spacing:-.2px}
+  .flagcard .fcat{font-size:11.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:3px}
+  .flagcard .fd{grid-column:2/3;color:var(--muted);font-size:15.5px;margin:3px 0 0;line-height:1.5}
+  .flagcard .fm{grid-row:1/3;grid-column:3/4;align-self:center;text-align:right;font-weight:700;font-size:18px;white-space:nowrap;letter-spacing:-.3px}
+  .flagcard.sev-high .fm{color:var(--coral)}.flagcard.sev-med .fm{color:var(--amber)}.flagcard.sev-low .fm{color:var(--blue)}
+  @media(max-width:560px){.flagcard{grid-template-columns:auto 1fr}.flagcard .fm{grid-row:auto;grid-column:2/3;text-align:left;margin-top:6px}}
+
+  /* where-it-goes snapshot (stacked proportional bar) */
+  .flowbar{display:flex;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--line);margin:6px 0 10px}
+  .flowbar .fseg{min-width:2px}
+  .flowleg{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 0 6px;font-size:13.5px;color:var(--muted)}
+  .flowleg span{display:inline-flex;align-items:center;gap:7px}.flowleg .sw{width:11px;height:11px;border-radius:3px}
+
+  /* amazon detail table */
+  .amztools{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 14px;align-items:center}
+  .amztools input[type=search],.amztools select{background:var(--panel-2);border:1px solid var(--line);color:var(--paper);
+    font:inherit;font-size:15px;padding:9px 12px;border-radius:10px}
+  .amztools input[type=search]{flex:1;min-width:180px}
+  .amztools .cnt{color:var(--muted);font-size:14px;white-space:nowrap}
+  .amztbl{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .amztbl .hd,.amztbl .rw{display:grid;grid-template-columns:92px 1fr 84px 58px 86px;gap:10px;padding:11px 16px;align-items:center}
+  .amztbl .hd{background:var(--panel-2);font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;position:sticky;top:52px}
+  .amztbl .hd span{cursor:pointer;user-select:none}.amztbl .hd span.s{color:var(--paper)}
+  .amztbl .rw{border-top:1px solid var(--line);font-size:15px}
+  .amztbl .rw .d2{color:var(--muted);font-size:13px}
+  .amztbl .rw .desc{color:var(--paper);line-height:1.35}
+  .amztbl .rw .desc a{color:var(--paper);text-decoration:none;border-bottom:1px dotted var(--faint)}
+  .amztbl .rw .r{text-align:right;font-weight:700}
+  .amztbl .rw .cat{font-size:12px}
+  .amztbl .scroll{max-height:640px;overflow:auto}
+  .snschip{display:inline-block;font-size:10px;font-weight:700;color:var(--green);border:1px solid var(--green);border-radius:6px;padding:0 4px;margin-left:6px;vertical-align:middle}
+  /* cat-care item table: 5 columns (date / item / store / type / price) */
+  #pets .amztbl .hd,#pets .amztbl .rw{grid-template-columns:88px 1fr 72px 92px 74px}
+  .srcchip{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:2px 7px;border-radius:999px}
+  .srcchip.Chewy{background:rgba(19,122,75,.15);color:var(--green)}
+  .srcchip.Amazon{background:rgba(237,161,0,.16);color:var(--amber)}
+  .catchip{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.03em;padding:2px 8px;border-radius:999px}
+  .catchip.food{background:rgba(19,122,75,.16);color:var(--green)}
+  .catchip.litter{background:rgba(47,109,246,.15);color:var(--blue)}
+  .catchip.treats{background:rgba(237,161,0,.16);color:var(--amber)}
+  .catchip.toys{background:rgba(109,75,196,.18);color:var(--violet)}
+  .catchip.health{background:rgba(192,38,38,.16);color:var(--coral)}
+  .catchip.other{background:rgba(91,102,114,.14);color:var(--muted)}
+  /* income-basis switch (salary only vs all income) */
+  .basisbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:11px 14px;margin:18px 0 4px}
+  .seg{display:inline-flex;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:3px}
+  .seg button{background:none;border:0;color:var(--muted);font:inherit;font-size:13.5px;font-weight:700;
+    padding:6px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+  .seg button.on{background:var(--green-mark);color:var(--ink)}
+  .basisbar .why{color:var(--muted);font-size:14px;flex:1;min-width:220px}
+  .basisbar .why b{color:var(--paper)}
+
+  /* month-in-review */
+  .mrhero{display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px 22px;margin:4px 0 2px}
+  .mrhero .big{font-size:clamp(44px,10vw,78px);font-weight:700;line-height:.9;letter-spacing:-2px}
+  .mrhero .unit{color:var(--muted);font-size:17px;font-weight:600;padding-bottom:10px;max-width:30ch}
+  .good-n{color:var(--green)}.bad-n{color:var(--coral)}.warn-n{color:var(--amber)}
+  .deltarow{display:grid;grid-template-columns:1fr 92px 92px 96px;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line);align-items:center;font-size:15px}
+  .deltarow:last-child{border-bottom:0}
+  .deltarow.hd{background:var(--panel-2);font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+  .deltarow .r{text-align:right;font-weight:700;white-space:nowrap}
+  .deltarow .up{color:var(--coral)}.deltarow .dn{color:var(--green)}
+  .deltarow>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .deltarow .r{overflow:hidden;text-overflow:ellipsis}
+  /* provenance rows carry long filenames -- let them wrap rather than clip */
+  #dqRows .rt{grid-template-columns:minmax(0,1fr) auto}
+  #dqRows .rt .n{overflow-wrap:anywhere;word-break:break-word}
+  #dqRows .rt.sum{grid-template-columns:1fr}
+  #dqRows .rt.sum .amt{text-align:left;font-size:14px;white-space:normal;overflow-wrap:anywhere}
+  /* deli ladder: the reading column is prose, so give it the room and drop the total on mobile */
+  #dlLadder .deltarow{grid-template-columns:82px 62px 92px minmax(0,1fr)}
+  @media(max-width:600px){
+    .deltarow{grid-template-columns:minmax(0,1fr) 72px 78px;gap:8px;padding:11px 12px;font-size:14px}
+    .deltarow .c-avg{display:none}
+    #dlLadder .deltarow{grid-template-columns:70px 50px minmax(0,1fr)}
+    #dlLadder .deltarow .r:last-child{text-align:left;font-size:13px}
+  }
+  /* savings-history chart */
+  .shwrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 14px 6px;overflow-x:auto}
+  .shwrap svg{min-width:620px}
+  .shleg{display:flex;flex-wrap:wrap;gap:8px 18px;margin:10px 6px 2px;font-size:13.5px;color:var(--muted)}
+  .shleg span{display:inline-flex;align-items:center;gap:7px}
+
+  /* merchants tab: leaderboard, weekday strip, full-table grid */
+  .lb{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:6px 20px}
+  .lbrow{padding:13px 0;border-bottom:1px solid var(--line)}.lbrow:last-child{border-bottom:0}
+  .lbrow .top{display:flex;align-items:baseline;gap:11px}
+  .lbrow .rk{font-size:13px;font-weight:700;color:var(--faint);width:22px;flex:0 0 22px;text-align:right}
+  .lbrow .nm{font-weight:700;font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lbrow .amt{font-size:19px;font-weight:700;white-space:nowrap}
+  .lbrow .sub2{display:flex;flex-wrap:wrap;gap:4px 14px;margin:5px 0 0 33px;font-size:13.5px;color:var(--muted)}
+  .lbrow .sub2 b{color:var(--paper);font-weight:700}
+  .lbrow .track{margin-left:33px}
+  .lbrow.exp{cursor:pointer}
+  .lbrow.exp .nm::before{content:"▸";display:inline-block;margin-right:7px;color:var(--faint);transition:transform .2s;font-size:12px}
+  .lbrow.exp.open .nm::before{transform:rotate(90deg)}
+  .lbrow .drill{display:none;margin:8px 0 2px 33px;padding-top:8px;border-top:1px dashed var(--line)}
+  .lbrow.exp.open .drill{display:block}
+  /* --- Corner Stores --- */
+  .trend{font-size:12px;font-weight:700;padding:1px 7px;border-radius:99px;white-space:nowrap}
+  .trend.up{background:rgba(192,38,38,.16);color:var(--down)}
+  .trend.dn{background:rgba(19,122,75,.16);color:var(--up)}
+  .trend.fl{background:rgba(120,130,140,.14);color:var(--muted)}
+  .cumwrap{margin:14px 0 6px}
+  .cumbar{display:flex;height:26px;border-radius:6px;overflow:hidden;background:var(--line)}
+  .cumbar i{display:block;height:100%;border-right:1px solid var(--panel)}
+  .cumkey{display:flex;flex-wrap:wrap;gap:5px 15px;margin-top:9px;font-size:13px;color:var(--muted)}
+  .cumkey span{display:flex;align-items:center;gap:6px}
+  .cumkey i{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .storectl{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:14px 0 4px}
+  .storectl input{flex:1;min-width:170px;padding:9px 12px;border-radius:9px;border:1px solid var(--line);
+    background:var(--panel);color:var(--paper);font-size:15px;font-family:inherit}
+  .storectl button{padding:8px 13px;border-radius:9px;border:1px solid var(--line);background:var(--panel);
+    color:var(--muted);font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .storectl button.on{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+  .storecount{font-size:13px;color:var(--faint);margin:6px 0 0 2px}
+  .dowwrap{overflow-x:auto}
+  .dow{display:flex;gap:8px;align-items:flex-end;height:120px;margin:6px 0 0;min-width:min-content}
+  .dow .d{flex:1 0 34px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%}
+  .dow .d .bx{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--amber),#c08600);min-height:3px}
+  .dow .d.peak .bx{background:linear-gradient(180deg,var(--coral),#9c1c1c)}
+  .dow .d .lb2{font-size:12px;color:var(--muted);font-weight:700}
+  .dow .d .vv{font-size:12.5px;font-weight:700;color:var(--paper)}
+  #merchants .amztbl .hd,#merchants .amztbl .rw{grid-template-columns:1fr 168px 74px 78px 84px}
+  #merchants .amztbl .rw .desc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  @media(max-width:640px){
+    #merchants .amztbl .hd,#merchants .amztbl .rw{grid-template-columns:1fr 74px 78px}
+    #merchants .amztbl .hd .h-cat,#merchants .amztbl .rw .c-cat,
+    #merchants .amztbl .hd .h-avg,#merchants .amztbl .rw .c-avg{display:none}
+    .amztbl .hd{grid-template-columns:1fr 70px;top:0}
+    .amztbl .rw{grid-template-columns:1fr 70px}
+    .amztbl .hd .h-date,.amztbl .hd .h-cat,.amztbl .hd .h-qty,.amztbl .rw .c-date,.amztbl .rw .c-cat,.amztbl .rw .c-qty{display:none}
+    #pets .amztbl .hd,#pets .amztbl .rw{grid-template-columns:1fr 66px 74px}
+    #pets .amztbl .hd span:first-child,#pets .amztbl .hd span:nth-child(4),#pets .amztbl .rw .c-date,#pets .amztbl .rw .c-cat{display:none}
+  }
+  .suite-nav{border-bottom:1px solid var(--line);background:#f7f6f2}
+  .suite-nav-inner{max-width:960px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none}
+  .suite-nav-inner::-webkit-scrollbar{display:none}
+  .suite-brand{color:var(--paper);font-size:13px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;margin-right:auto;white-space:nowrap}
+  .suite-brand i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:8px;background:linear-gradient(135deg,#0f9e69,var(--blue-mark));box-shadow:0 0 18px rgba(15,158,105,.25)}
+  .suite-nav a{color:var(--muted);font-size:13px;font-weight:700;padding:7px 10px;border-radius:8px;text-decoration:none;white-space:nowrap}
+  .suite-nav a:hover,.suite-nav a.active{color:var(--paper);background:var(--panel)}
+  @media(max-width:620px){.suite-nav-inner{align-items:flex-start}.suite-brand{position:sticky;left:0;background:#f7f6f2;padding:7px 10px 7px 0}.suite-nav a{padding:7px 8px}}
+
+  .demo-intro{margin-bottom:16px}.demo-intro h2{font-size:22px;letter-spacing:-.025em;margin:6px 0 10px;text-wrap:balance}.demo-intro p{color:var(--muted);margin:0 0 10px;max-width:80ch;font-size:15px}.demo-intro ol{margin:0 0 12px;padding-left:22px;color:var(--muted);font-size:15px;max-width:80ch}.demo-intro li{margin:5px 0}.demo-intro b{color:var(--ink)}.demo-intro .feedback{border-top:1px solid var(--line);padding-top:12px;color:var(--ink);margin-bottom:0}
+  .demo-banner{background:#ff8c1a;color:#1a1200;font:700 14px/1.45 ui-sans-serif,system-ui,"Segoe UI",sans-serif;padding:11px 18px;text-align:center;letter-spacing:.01em;position:relative;z-index:30}
+  .demo-banner a{color:inherit}
+  .demo-banner b{display:inline-block;background:#1a1200;color:#ffd9a8;padding:2px 8px;border-radius:6px;letter-spacing:.12em;font-size:11.5px;margin-right:9px;vertical-align:1px}
+  .demo-chip{display:inline-block;margin-left:8px;background:#ff8c1a;color:#1a1200;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:999px;vertical-align:2px}
+</style>
+</head>
+<body>
+<div class="demo-banner" role="note"><b>SAMPLE DATA</b>Nothing on this page is real. Every balance, transaction, merchant, account and person was generated for a fictional household, as of Sep 12, 2026. <a href="https://github.com/data-dl/northstar-finance">Source and generator on GitHub</a>.</div>
+<nav class="suite-nav" aria-label="Financial suite">
+  <div class="suite-nav-inner">
+    <a class="suite-brand" href="index.html"><i></i>Northstar 2.0 <span class="demo-chip">sample data</span></a>
+    <a href="index.html">Command center</a>
+    <a class="active" href="dashboard.html" aria-current="page">Money dashboard</a>
+    <a href="runway.html">Emergency runway</a>
+    <a href="portfolio_gauge.html">Portfolio gauge</a>
+  </div>
+</nav>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Demo · sample data · all accounts reconciled</div>
+    <h1>Money Dashboard</h1>
+    <p class="sub">Credit union + Chase Freedom (4417) + Chase Prime Visa (8802) + Amazon. Card history runs longer; the full income-and-spending picture covers <span id="headerWindow">—</span>.</p>
+  </header>
+</div>
+
+<div class="tabbar"><div class="tabs" role="tablist" aria-label="Dashboard sections">
+  <button class="tab" role="tab" aria-selected="true" data-tab="summary">Summary</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="thismonth">This Month</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="flags">Red Flags</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="paycheck">Paycheck</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="trends">Trends</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="categories">Where It Goes</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="budget">Budget</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="merchants">Merchants</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="food">Food</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="stores">Corner Stores</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="recurring">Recurring &amp; Leaks</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="amazon">Amazon</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="points">Points</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="pets">Cat Care</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="networth">Net Worth</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="action">Action Plan</button>
+</div></div>
+
+<div class="wrap">
+  <div class="basisbar">
+    <div class="seg" role="group" aria-label="Which income to measure savings against">
+      <button type="button" id="basisSalary" class="on">Salary only</button>
+      <button type="button" id="basisAll">All income</button>
+    </div>
+    <div class="why" id="basisWhy">—</div>
+  </div>
+</div>
+<script src="data.js"></script>
+
+<div class="wrap">
+
+  <!-- ===== SUMMARY ===== -->
+  <section class="panel active" id="summary" role="tabpanel">
+    <div class="hero">
+      <div class="big num" id="heroRate">—</div>
+      <div class="unit">of your take-home saved — and it's better than that sounds</div>
+    </div>
+    <p class="note">You keep about <b><span id="noteSaved">—</span> of every month's take-home</b> — but your paystub just proved the bigger story. <b><span id="noteRetire">—</span>/mo already leaves automatically</b> for your 403(b) (<span id="note403b">—</span>) and county pension (<span id="notePension">—</span>) before the check even lands. Count those and you're setting aside <b>~<span id="noteGrossSavedDollar">—</span>/mo — about <span id="noteGrossSavedPct">—</span>% of your <span id="noteGross">—</span> gross salary</b> — every month, on autopilot. Add the <b>~<span id="noteCapitalDeployed">—</span></b> you moved into investments this period, plus the employer-funded side of your pension you never even see, and a <b><span id="noteNetWorth">—</span> net worth</b> makes complete sense.</p>
+
+    <div class="grid">
+      <div class="stat"><div class="k">Gross salary</div><div class="v num" id="statGross">—</div></div>
+      <div class="stat"><div class="k">Take-home</div><div class="v num" id="statTakeHome">—<small>/mo</small></div></div>
+      <div class="stat" id="statAvgSpendTile"><div class="k">Avg spending</div><div class="v num" id="statAvgSpend">—<small>/mo</small></div></div>
+      <div class="stat" id="statSavedTile"><div class="k">Saved / mo</div><div class="v num" id="statSaved">—</div></div>
+      <div class="stat"><div class="k">Auto to retirement</div><div class="v num" id="statAutoRetire">—<small>/mo</small></div></div>
+      <div class="stat"><div class="k">Net worth</div><div class="v num" id="statNetWorth">—</div></div>
+    </div>
+
+    <h3 class="sub">The one-glance verdict</h3>
+    <div class="insight good"><div class="ic">✅</div><p><span class="h">You're in good shape — this is a maintenance job, not a rescue.</span>Rent is your only large fixed cost, your subscriptions are lean, and you save a healthy share of income. Nothing here is on fire.</p></div>
+    <div class="insight good"><div class="ic">🏦</div><p><span class="h">Real savings rate: ~<span id="insSavingsRateGross">—</span>% of gross — with triple retirement coverage.</span>Your paystub shows <b><span id="insAutoRetire">—</span>/mo</b> flowing automatically to a 403(b) <i>and</i> a county pension, and you also pay into Social Security — so you're building <b>three retirement streams</b> before any of it is a "decision." Plus the county covers your health premium in full. That's the quiet engine under your net worth.</p></div>
+    <div class="insight win"><div class="ic">🍳</div><p><span class="h">Cooking is working.</span>Since you started in April, eating out fell from <b>~<span id="insEatBefore">—</span> to ~<span id="insEatAfter">—</span>/mo</b> — roughly cut <span id="insEatPct">—</span>. That's the single biggest behavior change in the data, and it's a win.</p></div>
+    <div class="insight warn" id="insEnergy"><div class="ic">🥤</div><p><span class="h" id="insEnergyH">—</span><span id="insEnergyT">—</span></p></div>
+
+    <h3 class="sub">Do these three things this week</h3>
+    <div class="act"><div class="rank num">1</div><div class="h">Activate the Freedom card's rotating 5% categories</div><p class="d" id="actPointsSum">—</p><div class="save"><div class="n num" id="actPointsSumSave">—</div><div class="u">free upside</div></div></div>
+    <div class="act"><div class="rank num">2</div><div class="h">Move the corner-store cans onto your existing bulk order</div><p class="d" id="actEnergySum">—</p><div class="save"><div class="n num">~<span id="actEnergySumSave">—</span></div><div class="u">/year</div></div></div>
+    <div class="act"><div class="rank num">3</div><div class="h">Reset the transit &amp; travel plan to match reality</div><p class="d" id="actTransitSum">—</p><div class="save"><div class="n num" id="actTransitSumSave">—</div><div class="u">budget gap</div></div></div>
+
+    <h3 class="sub">Data this dashboard is standing on</h3>
+    <p class="lede" style="margin-bottom:12px">Every number above is only as good as the files behind it. This is the provenance, including what's missing — averages are computed over months that actually have data, so a missing statement can't masquerade as a cheap month.</p>
+    <div id="dqBanner"></div>
+    <div class="grid">
+      <div class="stat"><div class="k">Window</div><div class="v num" id="dqWindow">—</div></div>
+      <div class="stat"><div class="k">Months observed</div><div class="v num" id="dqAvgMonths">—</div></div>
+      <div class="stat"><div class="k">Newest transaction</div><div class="v num" id="dqNewest">—</div></div>
+      <div class="stat"><div class="k">Balance-date range</div><div class="v num" id="dqBalances">—</div></div>
+      <div class="stat"><div class="k">Integrity checks</div><div class="v num" id="dqChecks">—</div></div>
+    </div>
+    <div id="dqPending"></div>
+    <div class="rtable" style="margin-top:14px"><div id="dqRows"></div></div>
+
+    <h3 class="sub">Credit health <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--faint)">— snapshot from a credit-monitoring app, as of <span id="chAsOf">—</span></span></h3>
+    <div class="rtable" id="creditHealthTable"></div>
+    <p class="note" style="margin-top:10px;font-size:13.5px;color:var(--faint)">Score band only — the monitoring app reports a band rather than an exact number. This is a manual snapshot, not live; refresh the recorded values in <span class="num">config.yaml → credit_health</span> when you obtain a newer report.</p>
+  </section>
+
+  <!-- ===== THIS MONTH ===== -->
+  <section class="panel" id="thismonth" role="tabpanel">
+    <h2 class="sec"><span id="mrTitle">This month</span> in review</h2>
+    <p class="lede" id="mrLede">—</p>
+
+    <div class="mrhero">
+      <div class="big num" id="mrRate">—</div>
+      <div class="unit" id="mrRateLabel">—</div>
+    </div>
+    <p class="note" id="mrVerdict">—</p>
+
+    <div class="grid">
+      <div class="stat"><div class="k" id="mrIncomeLabel">Salary in</div><div class="v num" id="mrIncome">—</div></div>
+      <div class="stat"><div class="k">Spent</div><div class="v num" id="mrSpend">—</div></div>
+      <div class="stat"><div class="k">Family support</div><div class="v num" id="mrFamily">—</div></div>
+      <div class="stat"><div class="k">Kept</div><div class="v num" id="mrSaved">—</div></div>
+      <div class="stat"><div class="k">Paychecks</div><div class="v num" id="mrChecks">—</div></div>
+      <div class="stat"><div class="k">vs. your 12-mo average</div><div class="v num" id="mrVsAvg">—</div></div>
+    </div>
+
+    <div class="insight" id="mrProjection"><div class="ic">📅</div><p><span class="h">Where the month should land.</span><span id="mrProjText">—</span></p></div>
+    <div class="insight warn" id="mrWindfall" style="display:none"><div class="ic">💸</div><p><span class="h">Money arrived that isn't your paycheck.</span><span id="mrWindfallText">—</span></p></div>
+
+    <h3 class="sub">What moved, and by how much</h3>
+    <p class="lede" style="margin-bottom:12px">Every category this month against its average over the previous <span id="mrTrailN">12</span> months. Coral means you spent more than usual, green less. This is the whole explanation for the month's number.</p>
+    <div class="rtable">
+      <div class="deltarow hd"><span>Category</span><span class="r">This month</span><span class="r c-avg">Usual</span><span class="r">Difference</span></div>
+      <div id="mrDeltas"></div>
+    </div>
+    <div class="insight" id="mrDriverNote"><div class="ic">🔎</div><p><span class="h">The short version.</span><span id="mrDriverText">—</span></p></div>
+
+    <h3 class="sub">What you actually bought</h3>
+    <p class="lede" id="mrPurchaseLede" style="margin-bottom:12px">The largest merchants inside the categories that ran above your prior-year baseline. Rent is left out because it was normal, not the reason this month felt expensive.</p>
+    <div class="rtable">
+      <div class="deltarow hd"><span>Merchant / purchase</span><span class="r">Category</span><span class="r c-avg">Charges</span><span class="r">Total</span></div>
+      <div id="mrPurchaseRows"></div>
+    </div>
+    <div class="insight" id="mrAmazonDetail" style="display:none"><div class="ic">📦</div><p><span class="h" id="mrAmazonHeadline">—</span><span id="mrAmazonText">—</span></p></div>
+    <div class="insight warn" id="mrPostPeriod" style="display:none"><div class="ic">🗓️</div><p><span class="h">Tracked, but not in this month.</span><span id="mrPostPeriodText">—</span></p></div>
+
+    <h3 class="sub" id="f30Head">The next 30 days — what is already committed</h3>
+    <p class="lede" id="f30Lede">—</p>
+    <div class="stats">
+      <div class="stat"><div class="k">Cash the cards have no claim on</div><div class="v num" id="f30Open">—</div><div class="s" id="f30OpenSub">—</div></div>
+      <div class="stat"><div class="k">Already committed</div><div class="v num" id="f30Out">—</div><div class="s" id="f30OutSub">—</div></div>
+      <div class="stat"><div class="k">Paychecks expected</div><div class="v num" id="f30In">—</div><div class="s" id="f30InSub">—</div></div>
+      <div class="stat"><div class="k">Lowest point</div><div class="v num" id="f30Low">—</div><div class="s" id="f30LowSub">—</div></div>
+    </div>
+    <div class="insight" id="f30Insight"><div class="ic">🧭</div><p><span class="h" id="f30Headline">—</span><span id="f30Text">—</span></p></div>
+    <div class="rtable" style="margin-top:14px">
+      <div class="deltarow hd"><span>Date</span><span class="r">Item</span><span class="r c-avg">Amount</span><span class="r">Cash after</span></div>
+      <div id="f30Rows"></div>
+    </div>
+  </section>
+
+  <!-- ===== RED FLAGS ===== -->
+  <section class="panel" id="flags" role="tabpanel">
+    <h2 class="sec">Red flags &amp; where your money goes</h2>
+    <p class="lede">An automated audit of your statements — spending that runs hot, risks worth closing, and easy wins. Recomputed every time you rerun the pipeline. <span id="flagsHealthLine"></span></p>
+
+    <div class="scorebar" id="flagScorebar"></div>
+
+    <h3 class="sub">Where every month goes · <span id="flowTotal" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--faint)">—</span></h3>
+    <div class="flowbar" id="flowbar"></div>
+    <div class="flowleg" id="flowleg"></div>
+
+    <h3 class="sub">The findings</h3>
+    <div id="flagList"></div>
+    <p class="note" style="font-size:13.5px;color:var(--faint);margin-top:16px">Severity is heuristic: <b style="color:var(--coral)">HIGH</b> = acting on it clearly helps; <b style="color:var(--amber)">MEDIUM</b> = worth a look; <b style="color:var(--blue)">LOW</b> = minor tidy-up or opportunity. Budget-based flags use the targets in <span class="num">config.yaml → budgets</span>.</p>
+  </section>
+
+  <!-- ===== PAYCHECK ===== -->
+  <section class="panel" id="paycheck" role="tabpanel">
+    <h2 class="sec">Your paycheck, decoded</h2>
+    <p class="lede">Bi-weekly — 26 checks a year on an <span id="pcGrossAnnual">—</span> salary. Here's where every dollar of one <span id="pcGrossCheck">—</span> gross check actually goes, verified against two consecutive stubs (checks dated 8/07 and 8/21/2026).</p>
+    <div class="chart" id="paycheckchart"></div>
+
+    <h3 class="sub">The same picture, annualized (× 26 checks)</h3>
+    <div class="grid">
+      <div class="stat"><div class="k">Gross salary</div><div class="v num" id="pcAnnGross">—</div></div>
+      <div class="stat"><div class="k">Take-home</div><div class="v num" id="pcAnnTakeHome">—</div></div>
+      <div class="stat"><div class="k">Taxes</div><div class="v num" id="pcAnnTaxes">—</div></div>
+      <div class="stat"><div class="k">403(b)</div><div class="v num" id="pcAnn403b">—</div></div>
+      <div class="stat"><div class="k">County pension</div><div class="v num" id="pcAnnPension">—</div></div>
+      <div class="stat"><div class="k">Union dues</div><div class="v num" id="pcAnnDues">—</div></div>
+    </div>
+
+    <div class="insight good"><div class="ic">🏦</div><p><span class="h"><span id="pcForcedSavings">—</span> a year saves itself.</span>Your 403(b) (<span id="pcForced403b">—</span>) and county pension (<span id="pcForcedPension">—</span>) come out <i>before</i> the money ever reaches you — pure forced savings. That's what makes your ~<span id="pcGrossRate2">—</span>%-of-gross savings rate real, and why the <span id="pcTakeHomeRate">—</span>% you save from take-home is only <i>half</i> the story.</p></div>
+    <div class="insight good"><div class="ic">🛡️</div><p><span class="h">Three retirement streams + free health coverage.</span>You pay into <b>Social Security</b> ($194/check) <i>and</i> a defined-benefit <b>county pension</b> <i>and</i> a <b>403(b)</b> — three separate engines. And there's no health-premium line on your stub at all, meaning the county covers it 100%. That's a genuinely strong package, and it's the hidden cost that would appear if you ever lost the job (see the runway tool).</p></div>
+    <div class="insight warn"><div class="ic">📈</div><p><span class="h">Your single highest-leverage move: the 403(b) has ~<span id="pcHeadroom">—</span> of unused room.</span>You're putting in ~<span id="pcAnn403bShort">—</span>/yr against an annual cap of roughly $23–24k — while <i>also</i> funneling ~<span id="pcCapitalDeployed">—</span> into <b>taxable</b> investments and running a <span id="pcSurplus">—</span>+/mo surplus. Redirecting some of that into the 403(b) would cut this year's taxable income and grow tax-deferred. The tradeoff is liquidity (it's locked until 59½). Not advice — but dollar-for-dollar it's a bigger lever than any spending cut on this whole dashboard, and worth a look given your surplus.</p></div>
+  </section>
+
+  <!-- ===== TRENDS ===== -->
+  <section class="panel" id="trends" role="tabpanel">
+    <h2 class="sec">Two years of card spending</h2>
+    <p class="lede">Cards carried about a third of spending until May 2026, when everyday purchases moved onto the Chase Freedom for points. The cards tell the long story even where the bank data doesn't reach.</p>
+    <div class="svgwrap"><div id="trendsvg"></div></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#e7dff4"></i>2024 · setup</span>
+      <span><i class="dot" style="background:#eceaf1"></i>2025 · steady state</span>
+      <span><i class="dot" style="background:#dde8f3"></i>2026 · points pivot</span>
+    </div>
+    <div class="insight"><div class="ic">📈</div><p><span class="h">The spikes are events, not lifestyle creep.</span>Your highest card months stand out clearly above the baseline (see chart) — strip those out and your typical monthly card use is remarkably steady at <span id="trendBaseline">—</span>/mo.</p></div>
+
+    <h3 class="sub">Points earned per month</h3>
+    <p class="lede" style="margin-bottom:12px">Manual, from Chase's app (Account → Rewards) — points aren't in the CSV export, so this only has what was entered by hand.</p>
+    <div class="rtable" id="pointsTable"></div>
+    <div class="insight"><div class="ic">🔄</div><p><span class="h">Your Venmo is an 11-year financial autobiography.</span>Going back to 2015 it carried <b>real weight</b> for years — monthly rent paid straight to roommates ($6–12k/yr; Priya, then Marcus, then Dana), wrapped in a steady social life of "Foodsies," "Beersies," and split tabs. 2022–2024 was a noisy transition dominated by a personal lending relationship (next chart). Then 2025–2026 collapses to <b>~$650/yr</b> — the lean Lakeview present, just fruit and friends. That's not less spending; it's the whole arc of moving, living alone, and routing daily life through cards and the bank.</p></div>
+
+    <h2 class="sec" style="margin-top:40px">Venmo, ten years</h2>
+    <p class="lede">Yearly outflow, 2015–2026 (2016 not provided; 2026 is year to date through September 1). The shape <i>is</i> the story: the rent-and-roommates era, the 2023 loan spike, then the lean Lakeview present.</p>
+    <div class="svgwrap"><div id="venmosvg"></div></div>
+    <div class="legend">
+      <span><i class="dot" style="background:#e7dff4"></i>2015–21 · rent + roommates</span>
+      <span><i class="dot" style="background:#eceaf1"></i>2022–24 · transition</span>
+      <span><i class="dot" style="background:#dde8f3"></i>2025–26 · Lakeview solo</span>
+    </div>
+
+    <h2 class="sec" style="margin-top:40px">Where the big money went · by person</h2>
+    <p class="lede">Net flow across all years on record (paid minus received). Most of it is rent. One line is something else entirely.</p>
+    <div class="chart" id="personrows"></div>
+    <div class="insight"><div class="ic">🏠</div><p><span class="h">The big names are mostly just rent.</span>Across 2017–2021 you paid roughly <b>$43k in rent through Venmo</b> to a string of roommates (Priya → Marcus → Dana). One-way money, gone as expected — it only looks dramatic because Venmo makes it so visible.</p></div>
+    <div class="insight"><div class="ic">🔍</div><p><span class="h">The 2023 spike decoded: it was a loan, and it's been repaid.</span>~$18k of that year went to <b>one person — T. Okonkwo</b> — a personal loan (note the careful "send $1 to test, then send the real amount" pattern). On Venmo alone you look net $11,940 out, but that's only because <b>the rest was repaid through another channel</b>, not Venmo. It came back in full — so it's <b>settled: no open balance, nothing owed to you.</b></p></div>
+    <div class="insight warn"><div class="ic">🤝</div><p><span class="h">The 2023 loan is closed; the new loan to Alex is open and dated.</span><span id="openLoanNote">Loading the current receivable…</span></p></div>
+
+    <h2 class="sec" style="margin-top:40px">Money in vs out</h2>
+    <p class="lede">Green in, coral out, across the full bank window (<span id="duoMonths">—</span> months). The gap is what you kept. Don't panic at a single low month — card-payment timing and family transfers make it bounce; the <b><span id="duoAvgRate">—</span>% multi-month average</b> is the real story.</p>
+    <div class="chart" id="duo"></div>
+
+    <h2 class="sec" style="margin-top:40px">Did the card pivot change your spending?</h2>
+    <p class="lede" id="eraLede">—</p>
+    <div class="chart" id="eraRows"></div>
+    <div class="insight" id="eraInsight"><div class="ic">🔍</div><p><span class="h" id="eraHeadline">—</span><span id="eraText">—</span></p></div>
+
+    <h3 class="sub">So where did the extra money actually go?</h3>
+    <p class="lede" style="margin-bottom:12px">Every category, your first year (<span id="eraBaseLbl">—</span>) against the most recent quarter (<span id="eraRecentLbl">—</span>). Amber rows are <b>transient</b> — the furnishing wave, a dental bill, a cash pull — and will fall away on their own. The green/coral rows are the ones that persist.</p>
+    <div class="rtable">
+      <div class="deltarow hd"><span>Category</span><span class="r">First year</span><span class="r c-avg">Last 3 mo</span><span class="r">Change</span></div>
+      <div id="eraCats"></div>
+    </div>
+    <div class="insight" id="eraSplitInsight"><div class="ic">🧮</div><p><span class="h" id="eraSplitH">—</span><span id="eraSplitT">—</span></p></div>
+
+    <h2 class="sec" style="margin-top:40px">What your life costs before you decide anything</h2>
+    <p class="lede" id="ffLede">—</p>
+    <div class="chart" id="ffRows"></div>
+    <div class="insight" id="ffIns"><div class="ic">🏠</div><p><span class="h" id="ffH">—</span><span id="ffT">—</span></p></div>
+
+    <h2 class="sec" style="margin-top:40px">Savings per paycheck (the calendar, removed)</h2>
+    <p class="lede" id="pvLede">—</p>
+    <div class="chart" id="pvRows"></div>
+
+    <h2 class="sec" style="margin-top:40px">Savings rate, month by month</h2>
+    <p class="lede">Every month in the window. Bars are that month's rate; the thick line is the <b>3-month rolling average</b> — read the line, not the bars. A single month swings for reasons that aren't behavioral: a 3-paycheck month flatters you, a furnishing burst or a card bill landing late punishes you. Hollow-topped bars are <b>3-paycheck months</b>.</p>
+    <div class="shwrap" id="shchart"></div>
+    <div class="shleg">
+      <span><i class="dot" style="background:var(--green-mark)"></i>month at or above your median</span>
+      <span><i class="dot" style="background:var(--coral)"></i>below median</span>
+      <span><i class="dot" style="background:var(--blue);height:4px;border-radius:2px"></i>3-month rolling average</span>
+      <span><i class="dot" style="background:var(--faint);height:2px;border-radius:1px"></i>median (<span id="shMedian">—</span>)</span>
+    </div>
+    <div class="insight" id="shInsight"><div class="ic">📉</div><p><span class="h" id="shHeadline">—</span><span id="shText">—</span></p></div>
+
+    <h3 class="sub">The same months as dollars</h3>
+    <p class="lede" style="margin-bottom:12px">Percentages hide scale. This is what you actually kept each month, and the running total.</p>
+    <div class="shwrap" id="shdollars"></div>
+    <div class="rtable" style="margin-top:14px">
+      <div class="deltarow hd"><span>Month</span><span class="r">Kept</span><span class="r c-avg">Rate</span><span class="r">Running total</span></div>
+      <div id="shTable"></div>
+    </div>
+  </section>
+
+  <!-- ===== CATEGORIES ===== -->
+  <section class="panel" id="categories" role="tabpanel">
+    <h2 class="sec">Where every month goes</h2>
+    <p class="lede">Average per month, both accounts merged, accrual basis. Blue = fixed, grey = variable, amber = inflated by one-time events, violet = family support.</p>
+    <div class="chart" id="catrows"></div>
+    <div class="insight care"><div class="ic">💜</div><p><span class="h">Family support is a line, not a leak.</span><span id="catFamily">—</span>/mo to your parents, broken out on its own so it's visible and counted — never buried in "spending" or treated as waste.</p></div>
+    <div class="insight good"><div class="ic">🫐</div><p><span class="h">Venmo, decoded — it's your social life, not waste.</span>Your statements come with your own notes, so every line is legible. Over the current window your Venmo splits into buckets, none of them frivolous:</p></div>
+    <div class="chart" id="venmodecoderows"></div>
+    <div class="insight"><div class="ic">🍓</div><p><span class="h">It's mostly fruit, by frequency.</span><span id="catFruitRuns">—</span> fruit runs in the current window, mostly $2–$11 a pop. It's your <i>most common</i> Venmo purchase by count, even though by <i>dollars</i> the social meals and movies are bigger.</p></div>
+  </section>
+
+  <!-- ===== BUDGET ===== -->
+  <section class="panel" id="budget" role="tabpanel">
+    <h2 class="sec">Budget &amp; balance</h2>
+    <p class="lede">Your money split into <b>needs</b>, <b>wants</b>, and <b>savings</b> — the 50/30/20 rule of thumb — plus target-vs-actual for each category and the lumpy costs worth pre-funding.</p>
+
+    <h3 class="sub">The 50/30/20 view · share of take-home</h3>
+    <div class="stackbar" id="stack5030"></div>
+    <div class="cmp" id="cmp5030"></div>
+    <div class="insight" id="ins5030" style="margin-top:16px"></div>
+
+    <h3 class="sub">Target vs. actual · per category</h3>
+    <p class="lede" style="margin-bottom:12px">Green under budget, coral over. Targets are editable in <span class="num">config.yaml → budgets</span>.</p>
+    <div class="chart" id="budgetrows"></div>
+
+    <h3 class="sub">Sinking funds · set this aside monthly</h3>
+    <p class="lede" style="margin-bottom:12px">These costs don't hit evenly — one big month distorts everything. Reserve the monthly average and the spikes stop hurting your savings rate.</p>
+    <div class="rtable" id="sinkingTable"></div>
+  </section>
+
+  <!-- ===== MERCHANTS ===== -->
+  <section class="panel" id="merchants" role="tabpanel">
+    <h2 class="sec">Who actually gets your money</h2>
+    <p class="lede">Same dollars as "Where It Goes", cut by <b>storefront</b> instead of by category. Every debit swipe, PIN purchase and card charge is attributed to a named merchant, so the near-daily small stuff adds up in public instead of hiding inside a category subtotal.</p>
+
+    <h3 class="sub">The grab-and-go habit · delis, bodegas &amp; fast food</h3>
+    <div class="grid">
+      <div class="stat"><div class="k">Total, <span id="ggWindow">—</span></div><div class="v" id="ggTotal">—</div></div>
+      <div class="stat"><div class="k">Per month</div><div class="v" id="ggMo">—</div></div>
+      <div class="stat"><div class="k">Per year at this rate</div><div class="v" id="ggYear">—</div></div>
+      <div class="stat"><div class="k">Stops</div><div class="v" id="ggCount">—</div></div>
+      <div class="stat"><div class="k">Average stop</div><div class="v" id="ggTicket">—</div></div>
+      <div class="stat"><div class="k">Days with a stop</div><div class="v" id="ggDays">—</div></div>
+    </div>
+    <div class="insight warn" style="margin-top:18px"><div class="ic">🏪</div><p><span class="h">One counter takes the biggest cut.</span><b id="ggTopName">—</b> alone is <b id="ggTopTotal">—</b> across <b id="ggTopCount">—</b> visits — <span id="ggTopShare">—</span> of everything in this bucket, at an average of <b id="ggTopTicket">—</b> a stop. That's the habit in one line: it isn't one big purchase, it's <span id="ggTopPerMo">—</span> visits a month at coffee-and-a-can prices.</p></div>
+
+    <div class="lb chart" id="ggBoard"></div>
+    <p class="lede" style="font-size:14.5px;margin:10px 0 0">Click a merchant to see its month-by-month bars and when you first and last went there. Bars are scaled to the biggest merchant in the list.</p>
+
+    <h3 class="sub">It's death by small ticket</h3>
+    <p class="lede" style="margin-bottom:10px">Number of stops by size of the charge. <span id="ggSmallShare">—</span> of these purchases are under $5 — no single one feels like a decision, which is exactly why the total is <span id="ggYear2">—</span> a year.</p>
+    <div class="chart dowwrap" style="padding:18px 20px 14px"><div class="dow" id="ggTickets"></div></div>
+
+    <h3 class="sub">Month by month</h3>
+    <div class="chart dowwrap" style="padding:18px 20px 14px"><div class="dow" id="ggMonths"></div></div>
+
+    <h3 class="sub" id="dlHead">Reading the corner-store receipts you never kept</h3>
+    <p class="lede" id="dlLede">—</p>
+    <div class="grid">
+      <div class="stat"><div class="k">Visits decoded</div><div class="v num" id="dlVisits">—</div></div>
+      <div class="stat"><div class="k">On the price grid</div><div class="v num" id="dlGrid">—</div></div>
+      <div class="stat"><div class="k">Distinct ticket values</div><div class="v num" id="dlDistinct">—</div></div>
+      <div class="stat"><div class="k">Explained by known items</div><div class="v num" id="dlExplained">—</div></div>
+    </div>
+    <div class="rtable" style="margin-top:16px">
+      <div class="deltarow hd"><span>Pre-tax ticket</span><span class="r">Visits</span><span class="r c-avg">Total</span><span class="r">Reading</span></div>
+      <div id="dlLadder"></div>
+    </div>
+    <div class="insight" id="dlInsight"><div class="ic">🧾</div><p><span class="h" id="dlHeadline">—</span><span id="dlText">—</span></p></div>
+
+    <h3 class="sub" id="cbHead">The signature ticket — <span id="cbLabel">—</span></h3>
+    <p class="lede" id="cbLede">—</p>
+    <div class="stats">
+      <div class="stat"><div class="k">This month</div><div class="v num" id="cbSpend">—</div><div class="s" id="cbVisits">—</div></div>
+      <div class="stat"><div class="k">vs. usual</div><div class="v num" id="cbDelta">—</div><div class="s" id="cbUsual">—</div></div>
+      <div class="stat"><div class="k" id="cbComboK">Combos this month</div><div class="v num" id="cbCombos">—</div><div class="s" id="cbCombosUsual">—</div></div>
+      <div class="stat"><div class="k">Average ticket</div><div class="v num" id="cbAvg">—</div><div class="s" id="cbAvgUsual">—</div></div>
+    </div>
+    <div class="insight" id="cbInsight"><div class="ic">🍫</div><p><span class="h" id="cbHeadline">—</span><span id="cbText">—</span></p></div>
+    <div class="rtable" style="margin-top:14px">
+      <div class="deltarow hd"><span>Month</span><span class="r">Visits</span><span class="r c-avg">Combos</span><span class="r">Spend</span></div>
+      <div id="cbRows"></div>
+    </div>
+
+    <h3 class="sub">What a can of Red Bull actually costs you</h3>
+    <p class="lede" style="margin-bottom:12px">The same drink, bought three ways. Pooled across the deli and every Amazon order, so the spread is visible instead of averaged away.</p>
+    <div class="chart" id="edRows"></div>
+    <div class="insight" id="edInsight"><div class="ic">🥤</div><p><span class="h" id="edHeadline">—</span><span id="edText">—</span></p></div>
+
+    <h3 class="sub">Every merchant, all categories</h3>
+    <p class="lede" style="margin-bottom:12px">The full leaderboard — <span id="mTotalCount">—</span> distinct merchants over the window. Search by name, filter by category, click a column to sort.</p>
+    <div class="amztools">
+      <input type="search" id="mSearch" placeholder="Search merchants…" aria-label="Search merchants">
+      <select id="mCat" aria-label="Filter by category"><option value="">All categories</option></select>
+      <span class="cnt" id="mCount">—</span>
+    </div>
+    <div class="amztbl"><div class="hd">
+      <span data-sort="name" class="h-name">Merchant</span>
+      <span data-sort="cat_name" class="h-cat">Category</span>
+      <span data-sort="count" class="r h-count">Visits</span>
+      <span data-sort="avg_mo" class="r h-avg">$/mo</span>
+      <span data-sort="total" class="r s h-total">Total ▾</span>
+    </div><div class="scroll" id="mRows"></div></div>
+    <p class="lede" style="font-size:14px;margin:10px 0 0">Rent and Venmo transfers are excluded — a landlord and a friend aren't merchants. Names are normalized (store numbers, street addresses and the statement's "LAKEVIEW OH" tails stripped) so one store is one line; the mapping is editable in <span class="num">config.yaml → merchant_aliases</span>.</p>
+  </section>
+
+  <!-- ===== FOOD ===== -->
+  <section class="panel" id="food" role="tabpanel">
+    <h2 class="sec">The cooking shift</h2>
+    <p class="lede">Most of your food runs through your debit card, so we couldn't see this clearly until the bank data arrived. You started cooking ~April 6. Here's what happened.</p>
+    <div class="flip">
+      <div class="col before"><div class="cap" id="foodBeforeLabel">Before</div>
+        <div class="ln"><span>Groceries</span><b class="num" id="foodBeforeGroc">—</b></div>
+        <div class="ln"><span>Eating out</span><b class="num" id="foodBeforeOut">—</b></div>
+        <div class="ln tot"><span>Total food</span><b class="num" id="foodBeforeTotal">—</b></div></div>
+      <div class="col after"><div class="cap" id="foodAfterLabel">After</div>
+        <div class="ln"><span>Groceries</span><b class="num" id="foodAfterGroc">—</b></div>
+        <div class="ln"><span>Eating out</span><b class="num" id="foodAfterOut">—</b></div>
+        <div class="ln tot"><span>Total food</span><b class="num" id="foodAfterTotal">—</b></div></div>
+    </div>
+    <div class="insight win"><div class="ic">🔥</div><p><span class="h">Eating out cut ~<span id="foodEatPct">—</span>.</span>Takeout dropped from <span id="foodEatBefore2">—</span> to <span id="foodEatAfter2">—</span> while groceries climbed. Total food only fell modestly, because you're buying real ingredients now, but the <b>quality and direction</b> of the change is the real story.</p></div>
+
+    <h3 class="sub">Month by month — groceries vs eating out</h3>
+    <div class="chart" id="foodrows"></div>
+
+    <div class="insight" id="insFoodEnergy"><div class="ic">🥤</div><p><span class="h" id="insFoodEnergyH">—</span><span id="insFoodEnergyT">—</span></p></div>
+  </section>
+
+  <!-- ===== CORNER STORES ===== -->
+  <section class="panel" id="stores" role="tabpanel">
+    <h2 class="sec">Corner stores — every shop that gets your money</h2>
+    <p class="lede">Every deli, bodega, corner store and takeout counter you've paid, ranked by what they've actually taken. This is the habit at full resolution: not one decision, but a standing relationship with a short list of shops. Tap any row for its 12-month trend.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="k">Total, all stores</div><div class="v num" id="csTotal">—</div><div class="s" id="csWindow">—</div></div>
+      <div class="stat"><div class="k">Per month</div><div class="v num" id="csMo">—</div><div class="s" id="csShare">—</div></div>
+      <div class="stat bad"><div class="k">Run-rate</div><div class="v num" id="csYear">—</div><div class="s">per year at this pace</div></div>
+      <div class="stat"><div class="k">Visits</div><div class="v num" id="csVisits">—</div><div class="s" id="csTicket">—</div></div>
+      <div class="stat"><div class="k">Days with a stop</div><div class="v num" id="csDays">—</div><div class="s">of the whole window</div></div>
+      <div class="stat"><div class="k">Distinct shops</div><div class="v num" id="csShops">—</div><div class="s">have taken your money</div></div>
+    </div>
+
+    <div class="insight warn"><div class="ic">🏪</div><p><span class="h" id="csHead">—</span><span id="csText">—</span></p></div>
+
+    <h3 class="sub">How concentrated is it?</h3>
+    <p class="lede sm">Each block is one store, widest first. The handful on the left is where the habit actually lives — and where changing anything would actually register.</p>
+    <div class="cumwrap">
+      <div class="cumbar" id="csCum"></div>
+      <div class="cumkey" id="csCumKey"></div>
+    </div>
+
+    <h3 class="sub">Every store, ranked</h3>
+    <div class="storectl">
+      <input id="csSearch" type="search" placeholder="Filter by name — e.g. fourth, pizza, market" aria-label="Filter stores">
+      <button id="csTop" class="on" type="button">Top 20</button>
+      <button id="csAll" type="button">Show all</button>
+    </div>
+    <div class="storecount" id="csCount">—</div>
+    <div class="lb" id="csBoard"></div>
+
+    <h3 class="sub">What a ticket actually looks like</h3>
+    <p class="lede sm">The signature of this habit is volume, not size — the money is made of small change repeated hundreds of times.</p>
+    <div class="cols" id="csTickets"></div>
+  </section>
+
+  <!-- ===== RECURRING ===== -->
+  <section class="panel" id="recurring" role="tabpanel">
+    <h2 class="sec">Everything that bills you automatically</h2>
+    <p class="lede">The stuff that leaves your accounts whether you think about it or not — <b><span id="recActiveTotal">—</span>/mo</b> of confirmed active recurring charges. Each line shows its billing rhythm; price increases are called out in red, and services that stopped billing you are struck through at the bottom of each list.</p>
+
+    <h3 class="sub">Subscriptions &amp; digital</h3>
+    <div class="rtable" id="subsTable"></div>
+
+    <h3 class="sub">Fixed bills</h3>
+    <div class="rtable" id="billsTable"></div>
+
+    <div class="insight warn"><div class="ic">💊</div><p><span class="h">Ridgeline Rx is the one medical line worth a periodic look.</span>At ~<span id="recRidgeline Rx">—</span>/mo it is the largest single bill after rent and utilities. I'm not second-guessing a medical decision — just flagging that if anything here deserves a "do I still need all of this?" check, it's this one, simply because of its size.</p></div>
+  </section>
+
+  <!-- ===== AMAZON ===== -->
+  <section class="panel" id="amazon" role="tabpanel">
+    <h2 class="sec">Amazon</h2>
+    <p class="lede"><span id="amzItems">—</span> items, ~<span id="amzTotal">—</span> total, ~<span id="amzAvgMo">—</span>/mo (<span id="amzWindow">—</span>). Every line categorized automatically from description keywords.</p>
+
+    <h3 class="sub">By category · per month</h3>
+    <div class="chart" id="amazonrows"></div>
+
+    <h3 class="sub">Big-ticket items</h3>
+    <div class="rtable" id="amazonBigTicket"></div>
+
+    <h3 class="sub">Every purchase · search &amp; filter</h3>
+    <p class="lede" style="margin-bottom:10px">All <span id="amzDetailCount">—</span> line items. Search the text, filter by category, or click a column to sort. <span class="snschip">S&amp;S</span> marks Subscribe &amp; Save.</p>
+    <div class="amztools">
+      <input type="search" id="amzSearch" placeholder="Search items (e.g. red bull, curtain, cat)…" aria-label="Search Amazon items">
+      <select id="amzCat" aria-label="Filter by category"></select>
+      <span class="cnt" id="amzShown">—</span>
+    </div>
+    <div class="amztbl">
+      <div class="hd">
+        <span class="h-date" data-sort="date">Date</span>
+        <span class="h-desc" data-sort="description">Item</span>
+        <span class="h-cat" data-sort="category">Category</span>
+        <span class="h-qty" data-sort="qty" style="text-align:right">Qty</span>
+        <span class="h-total s" data-sort="line_total" style="text-align:right">Total ▾</span>
+      </div>
+      <div class="scroll"><div id="amzRows"></div></div>
+    </div>
+  </section>
+
+  <!-- ===== CAT CARE (CHEWY + AMAZON) ===== -->
+  <section class="panel" id="points" role="tabpanel">
+    <h2 class="sec">Points — is the pivot actually paying?</h2>
+    <p class="lede">You moved your spending onto these cards on <b>May 19</b> to earn points. These figures come off the cards' own rewards blocks on the <span id="ptStmtDates">latest</span> statements — what the strategy actually produced, not an estimate.</p>
+
+    <div class="stats" id="ptStats"></div>
+    <div class="insight warn" id="ptInsight"><div class="ic">⚠️</div><p><span class="h" id="ptHead">—</span><span id="ptText">—</span></p></div>
+
+    <h3 class="sub">Card by card</h3>
+    <div id="ptCards"></div>
+
+    <h3 class="sub">Categories the Prime Visa pays extra on — all currently on the 1% card</h3>
+    <div class="rtable">
+      <div class="deltarow hd"><span>Category</span><span class="r">Per month</span><span class="r c-avg">Uplift</span><span class="r">Per year</span></div>
+      <div id="ptReroute"></div>
+    </div>
+    <p class="note" id="ptRerouteNote">—</p>
+  </section>
+
+  <section class="panel" id="pets" role="tabpanel">
+    <h2 class="sec">Cat care 🐾</h2>
+    <p class="lede">Everything you spend on Pepper, the cat you adopted in May — pulled from <b>both Chewy and Amazon</b>, since not all of it runs through Chewy. This is <b>care, not consumption</b>: it already sits in the "cat care" line of your spending, gathered here so you can see what the money buys and whether it's bought smartly.</p>
+
+    <div class="hero">
+      <div class="big num" id="petCombined">—</div>
+      <div class="unit">on the cat so far (since <span id="petWindow">—</span>) — <span id="petSplitNote">—</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="stat"><div class="k">Chewy — supplies</div><div class="v num" id="petRunRate">—<small>/mo</small></div></div>
+      <div class="stat"><div class="k">Chewy orders</div><div class="v num" id="petOrders">—</div></div>
+      <div class="stat"><div class="k">Amazon — cat</div><div class="v num" id="petAmzTotal">—</div></div>
+      <div class="stat"><div class="k">Amazon items</div><div class="v num" id="petAmzItems">—</div></div>
+      <div class="stat"><div class="k">Promo credit used</div><div class="v num" id="petPromo">—</div></div>
+    </div>
+
+    <div class="insight good" id="petSenseCheck" style="margin-top:20px"></div>
+
+    <div class="insight" id="petAmzInsight" style="margin-top:2px"><div class="ic">📦</div><p><span class="h">The Amazon side is mostly one-time setup — the cost of bringing a cat home.</span><span id="petAmzGearNote">—</span> Chewy is the ongoing food &amp; litter; Amazon was the gear you buy once (feeder, water fountain, litter boxes &amp; mats), plus a little food and treats. That's why Amazon looks big now and won't repeat monthly.</p></div>
+
+    <h3 class="sub">Chewy — what the recurring money goes to</h3>
+    <p class="lede" style="margin-bottom:10px">By list price of the items Chewy surfaced per order (a representative sample — the export shows the top items, not every line). Food and litter are the recurring necessities; treats and toys are the extras.</p>
+    <div class="chart" id="petTypeRows"></div>
+
+    <h3 class="sub">Chewy — month by month</h3>
+    <div class="chart" id="petMonthRows"></div>
+
+    <div class="insight" id="petAutoship"><div class="ic">🔁</div><p><span class="h">Autoship is the one easy win here.</span>You reorder food &amp; litter every couple of weeks and pay full price each time. Chewy Autoship is <b>5% off every order</b> (35% off the first) plus locked-in free shipping — same products, ~<span id="petAutoshipYr">—</span>/yr back, zero effort. You already stack promo credits well; this just automates the rest.</p></div>
+
+    <h3 class="sub">Every cat purchase · Chewy + Amazon</h3>
+    <p class="lede" style="margin-bottom:10px">All <span id="petItemCount">—</span> items across both stores. Search, filter by type, or click a column to sort. Chewy prices are list price (you often paid less); Amazon prices are what you paid.</p>
+    <div class="amztools">
+      <input type="search" id="petSearch" placeholder="Search items (e.g. litter, friskies, feeder)…" aria-label="Search cat items">
+      <select id="petCat" aria-label="Filter by type"></select>
+      <select id="petSource" aria-label="Filter by store"><option value="">Both stores</option><option value="Chewy">Chewy</option><option value="Amazon">Amazon</option></select>
+      <span class="cnt" id="petShown">—</span>
+    </div>
+    <div class="amztbl">
+      <div class="hd" id="petTblHead">
+        <span data-sort="date">Date</span>
+        <span data-sort="product">Item</span>
+        <span data-sort="source">Store</span>
+        <span data-sort="cat">Type</span>
+        <span data-sort="price" style="text-align:right" class="s">Price ▾</span>
+      </div>
+      <div class="scroll"><div id="petRows"></div></div>
+    </div>
+  </section>
+
+  <!-- ===== NET WORTH ===== -->
+  <section class="panel" id="networth" role="tabpanel">
+    <h2 class="sec">Balance sheet</h2>
+    <p class="lede">Read from <span class="num">data/balances/</span> (account balances + Vanguard holdings). Supporting balance dates span <span id="nwAsOf">—</span>; this is a reconciled snapshot, not a claim that every account was priced on one day.</p>
+
+    <div class="hero">
+      <div class="big num" id="nwTotal">—</div>
+      <div class="unit">net worth — assets minus liabilities</div>
+    </div>
+
+    <div class="insight good" id="nwDefinition" style="margin-top:16px"></div>
+
+    <div class="grid">
+      <div class="stat"><div class="k">Total assets</div><div class="v num" id="nwAssets">—</div></div>
+      <div class="stat"><div class="k">Total liabilities</div><div class="v num" id="nwLiabilities">—</div></div>
+      <div class="stat"><div class="k">Stocks</div><div class="v num" id="nwStocks">—</div></div>
+      <div class="stat"><div class="k">Bonds</div><div class="v num" id="nwBonds">—</div></div>
+      <div class="stat"><div class="k">Liquid cash</div><div class="v num" id="nwLiquidCash">—<small> spendable</small></div></div>
+    </div>
+
+    <div id="nwStale"></div>
+
+    <h3 class="sub">Asset allocation — stocks / bonds / cash</h3>
+    <p class="lede" style="margin-bottom:12px">Target-date funds (VFIFX) decomposed 88% stocks / 9% bonds / 3% cash; money-market and bank balances counted as cash; individual tickers as stocks. <b>Note:</b> the cash/cash-like slice here (<span id="nwAllocCashNote">—</span>) includes investment-account cash, the target-date fund’s modeled cash sleeve, and the loan receivable. Your <b>spendable</b> cash — Cash Plus + credit union — is only <span id="nwLiquidCashNote">—</span>.</p>
+    <div class="chart" id="nwAllocation"></div>
+
+    <div class="insight warn" id="nwConcentration" style="margin-top:16px"></div>
+
+    <h3 class="sub">Where it sits for taxes</h3>
+    <p class="lede" style="margin-bottom:12px">Which bucket the money is in matters as much as the total — it decides what you can touch now vs. what's locked, and what gets taxed on the way out.</p>
+    <div class="chart" id="nwTaxSplit"></div>
+
+    <h3 class="sub">Individual stock positions</h3>
+    <div class="rtable" id="nwHoldings"></div>
+
+    <h3 class="sub">Accounts</h3>
+    <div class="rtable" id="nwAccounts"></div>
+
+    <h3 class="sub">Liabilities</h3>
+    <div class="rtable" id="nwLiabilitiesTable"></div>
+
+    <div class="insight" id="nwUnfunded" style="margin-top:16px"></div>
+    <div id="nwInsuranceGaps"></div>
+  </section>
+
+  <!-- ===== ACTION PLAN ===== -->
+  <section class="panel" id="action" role="tabpanel">
+    <h2 class="sec">The plan</h2>
+    <p class="lede">Ranked by impact and ease — rewritten against the full two-year statement history now that every month is present. <b>Nothing here is a rescue.</b> The card strategy is working, the spending rise was mostly a one-time setup year, and the honest to-do list is short.</p>
+    <div class="insight good" id="actVerdict"><div class="ic">✅</div><p><span class="h" id="actVerdictH">—</span><span id="actVerdictT">—</span></p></div>
+
+    <div class="act safety"><div class="rank num">1</div><div class="h">Track the $3,500 receivable to December 20</div><p class="d" id="actLoan">It is an asset, not spending — and not cash you can use until it comes home.</p><div class="save"><div class="n num">$3,500</div><div class="u">due back</div></div></div>
+
+    <div class="act"><div class="rank num">2</div><div class="h">Activate the Freedom card's rotating 5% categories</div><p class="d" id="actPoints">—</p><div class="save"><div class="n num" id="actPointsSave">—</div><div class="u">free upside</div></div></div>
+
+    <div class="act"><div class="rank num">3</div><div class="h">Reset the transit &amp; travel plan to match reality</div><p class="d" id="actTransit">—</p><div class="save"><div class="n num" id="actTransitSave">—</div><div class="u">budget gap</div></div></div>
+
+    <div class="act"><div class="rank num">4</div><div class="h">Move the corner-store cans onto your existing bulk order</div><p class="d" id="actEnergy">—</p><div class="save"><div class="n num">~<span id="actEnergySave">—</span></div><div class="u">/year</div></div></div>
+
+    <div class="act house"><div class="rank num">5</div><div class="h">✅ Verified — the points strategy is costing you nothing</div><p class="d" id="actAutopay">—</p><div class="save"><div class="n num">$0</div><div class="u">interest ever</div></div></div>
+
+    <div class="act house"><div class="rank num">6</div><div class="h">✅ Keep Chewy Autoship lean</div><p class="d">You're already enrolled. The nine YTD order confirmations all reconcile; keep the 5% recurring discount, and use each review email to skip anything still in the pantry. Recurring essentials run about <span id="actChewyEss">—</span>/mo.</p><div class="save"><div class="n num">~<span id="actChewySave">—</span></div><div class="u">/year</div></div></div>
+
+    <div class="act"><div class="rank num">7</div><div class="h">Audit the two web-hosting bills</div><p class="d">Bluepine Hosting + DomainWorks both bill you. If one is a dead domain or unused site, kill it. Five-minute check.</p><div class="save"><div class="n num">~$120</div><div class="u">/yr if one's dead</div></div></div>
+
+    <div class="act house"><div class="rank num">8</div><div class="h">Periodically sanity-check Ridgeline Rx</div><p class="d">Your largest medical line (~$59/mo). Not a cut — just a recurring "is this still worth it?" given the size.</p><div class="save"><div class="n num">$$$</div><div class="u">if it changes</div></div></div>
+
+    <div class="insight good" style="margin-top:24px"><div class="ic">🎯</div><p><span class="h">Bottom line.</span>You're saving <span id="bottomLineRate">—</span>% of take-home on top of forced retirement savings, and your net worth proves the pattern. This dashboard is here to keep it boring — boring is exactly what winning looks like.</p></div>
+  </section>
+
+  <div class="foot" id="footText">
+    <b>Data coverage:</b> loading…
+  </div>
+</div>
+
+<script>
+  // ---------- data (from data.js -> window.DASHBOARD_DATA) ----------
+  var DATA_OK = !!(window.DASHBOARD_DATA && window.DASHBOARD_DATA.summary);
+  var D = window.DASHBOARD_DATA || {};
+  var DEMO_TODAY = new Date('2026-09-12T12:00:00');
+
+  // Days between a YYYY-MM-DD stamp and *today*, computed on every page view.
+  // stale_days in data.js is frozen at build time and silently understates age.
+  function daysSince(iso){
+    if(!iso) return null;
+    var p=String(iso).slice(0,10).split('-'); if(p.length!==3) return null;
+    var then=Date.UTC(+p[0],+p[1]-1,+p[2]), now=DEMO_TODAY;
+    return Math.floor((Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())-then)/86400000);
+  }
+  function liveAgeLabel(iso){
+    var d=daysSince(iso);
+    if(d===null) return '';
+    if(d<=0) return 'today';
+    return d+(d===1?' day ago':' days ago');
+  }
+  // A missing data.js used to render $0 everywhere, which looks like an answer.
+  if(!DATA_OK){
+    document.addEventListener('DOMContentLoaded',function(){
+      var b=document.createElement('div');
+      b.setAttribute('role','alert');
+      b.style.cssText='position:sticky;top:0;z-index:99;background:#b52d2d;color:#fff;'+
+        'padding:14px 18px;font-weight:700;font-size:16px;text-align:center';
+      b.textContent='data.js did not load - every figure below is a placeholder, not your money. '+
+        'Open this file from its own folder, or re-run update.py.';
+      document.body.insertBefore(b,document.body.firstChild);
+    });
+  }
+  function money(n){return "$"+Math.round(n).toLocaleString();}
+  function money2(n){return "$"+(Math.round(n*100)/100).toFixed(2);}
+  function moneyK(n){return n>=1000?"$"+(n/1000).toFixed(n<10000?1:0)+"k":"$"+Math.round(n).toLocaleString();}
+  function moneyS(n){return (n<0?"−":"")+"$"+Math.abs(Math.round(n)).toLocaleString();}
+
+  // income basis (salary only vs all income) -- declared early: blocks above register listeners
+  var BASIS='salary';
+  var BASIS_LISTENERS=[];
+  function onBasis(fn){ BASIS_LISTENERS.push(fn); }
+  function isSalary(){ return BASIS==='salary'; }
+  function bKey(a,b){ return isSalary()?a:b; }
+  function pct(n){return Math.round(n*10)/10+"%";}
+  function eraOf(i,n){ var perEra=Math.ceil(n/3)||1; return Math.min(2,Math.floor(i/perEra)); }
+  function byId(id){return document.getElementById(id);}
+  function setText(id,val){var el=byId(id); if(el) el.textContent=val;}
+
+  var TREND=(D.trends&&D.trends.card_spend_24mo||[]).map(function(r,i,arr){return [r.month,r.amount,eraOf(i,arr.length)];});
+  var DUO=(D.trends&&D.trends.income_vs_spend||[]).map(function(r){return [r.month,r.income,r.spend];});
+  var RATE=(D.trends&&D.trends.savings_rate_by_month||[]).map(function(r){return [r.month,Math.round(r.rate)];});
+  var FOOD=(D.food&&D.food.monthly||[]).map(function(r){return [r.month,r.groceries,r.eating_out];});
+  var CATS=(D.categories||[]).map(function(c){return [c.name,c.avg_mo,c.tag];});
+
+  (function(){
+    var amts=TREND.map(function(d){return d[1];}).slice().sort(function(a,b){return a-b;});
+    if(amts.length){
+      var trimmed=amts.slice(0, Math.max(1, amts.length-2)); // drop the top 2 outlier months
+      var mid=Math.floor(trimmed.length/2);
+      var median=trimmed.length%2?trimmed[mid]:(trimmed[mid-1]+trimmed[mid])/2;
+      setText('trendBaseline', money(median));
+    }
+  })();
+
+  // ---------- credit card points (manual, from Chase's Rewards page) ----------
+  (function(){
+    var host = byId('pointsTable');
+    if(!host) return;
+    var pts = (D.credit_card_points && D.credit_card_points.monthly) || [];
+    if(!pts.length){
+      host.innerHTML = '<div class="rt"><div class="n">No points data yet</div><div class="d">Enter monthly points totals from Chase (Account → Rewards) in config.yaml to populate this.</div></div>';
+      return;
+    }
+    var byMonth = {};
+    pts.forEach(function(p){
+      byMonth[p.month] = byMonth[p.month] || {};
+      byMonth[p.month][p.card] = p.points;
+    });
+    var months = Object.keys(byMonth).sort();
+    var grandTotal = 0;
+    var rows = months.map(function(m){
+      var cards = byMonth[m];
+      var monthTotal = Object.keys(cards).reduce(function(a,k){return a+(cards[k]||0);}, 0);
+      grandTotal += monthTotal;
+      var perCard = Object.keys(cards).map(function(k){return k+': '+cards[k].toLocaleString();}).join(' · ');
+      return '<div class="rt"><div class="n">'+m+'</div><div class="amt num">'+monthTotal.toLocaleString()+' pts</div><div class="d">'+perCard+'</div></div>';
+    }).join('');
+    host.innerHTML = rows + '<div class="rt sum"><div class="n">Total</div><div class="amt num">'+grandTotal.toLocaleString()+' pts</div></div>';
+  })();
+
+  // ---------- summary / hero ----------
+  (function(){
+    var s=D.summary||{}, pc=D.paycheck||{};
+    // the figures that depend on which income base is selected
+    function drawBasis(){
+      var rate=isSalary()?(s.savings_rate_salary!=null?s.savings_rate_salary:s.savings_rate_takehome):s.savings_rate_takehome;
+      var saved=isSalary()?(s.saved_mo_salary!=null?s.saved_mo_salary:s.saved_mo):s.saved_mo;
+      byId('heroRate') && (byId('heroRate').textContent = Math.round(rate)+'%');
+      setText('statSaved', money(saved));
+      setText('noteSaved', money(saved));
+      setText('noteGrossSavedDollar', money(saved+s.auto_retirement_mo));
+      setText('bottomLineRate', Math.round(rate));
+      setText('duoAvgRate', Math.round(rate));
+      setText('pcSurplus', money(saved));
+      setText('pcTakeHomeRate', Math.round(rate));
+    }
+    drawBasis(); onBasis(drawBasis);
+    setText('statGross', money(s.gross_annual));
+    setText('statTakeHome', money(s.take_home_mo));
+    setText('statAvgSpend', money(s.avg_spend_mo));
+    setText('statAutoRetire', money(s.auto_retirement_mo));
+    // momentum chips: trailing 3 months vs the 3 before (direction, not precision)
+    (function(){
+      var mo=s.momentum; if(!mo) return;
+      function chip(hostId, delta, unit, upIsBad){
+        var host=byId(hostId); if(!host) return;
+        var mag=Math.abs(delta), flat=mag<(unit==='%'?3:2);
+        var cls=flat?'flat':(delta>0?(upIsBad?'up-bad':'up-good'):(upIsBad?'down-good':'down-bad'));
+        var arrow=flat?'▪':(delta>0?'▲':'▼');
+        var label=flat?'steady':(arrow+' '+(unit==='%'?Math.round(mag)+'%':mag.toFixed(0)+' pts'));
+        host.insertAdjacentHTML('beforeend','<div class="trendchip '+cls+'" title="'+mo.months+' vs the prior 3 months">'+label+' · last 3 mo</div>');
+      }
+      chip('statAvgSpendTile', mo.spend_delta_pct, '%', true);   // spending up = bad
+      chip('statSavedTile', mo.rate_delta_pts, 'pts', false);    // savings rate up = good
+    })();
+    setText('statNetWorth', '$'+Math.round(s.net_worth/1000)+'K');
+    setText('noteRetire', money(s.auto_retirement_mo));
+    setText('note403b', money((pc.annual&&pc.annual.contrib_403b||0)/12));
+    setText('notePension', money((pc.annual&&pc.annual.pension||0)/12));
+    setText('noteGrossSavedPct', Math.round(s.savings_rate_gross));
+    setText('noteGross', money(s.gross_annual));
+    setText('noteCapitalDeployed', money(s.capital_deployed));
+    setText('noteNetWorth', '$'+Math.round(s.net_worth/1000)+'K');
+    setText('insSavingsRateGross', Math.round(s.savings_rate_gross));
+    setText('insAutoRetire', money(s.auto_retirement_mo));
+    var food=D.food||{};
+    setText('insEatBefore', money((food.before||{}).eating_out_mo||0));
+    setText('insEatAfter', money((food.after||{}).eating_out_mo||0));
+    var b=(food.before||{}).eating_out_mo||0, a=(food.after||{}).eating_out_mo||0;
+    setText('insEatPct', b>0?Math.round((1-a/b)*100)+'%':'—');
+    var cov=D.coverage||{};
+    var bank=cov.bank||{};
+    setText('headerWindow', bank.start&&bank.end ? (bank.start+' – '+bank.end) : '—');
+    setText('duoMonths', bank.months!=null?bank.months:'—');
+  })();
+
+
+  // ---------- energy-drink economics: every claim templated from the data ----------
+  (function(){
+    var e=D.energy, dd=D.deli_decode; if(!e) return;
+    var yr=money(e.savings_yr||0);
+    setText('actEnergySumSave', yr); setText('actEnergySave', yr);
+    var body='You already buy this exact product in bulk at '+money2(e.bulk_per_can)+'/can. At the deli it is '+
+      money2(e.deli_per_can)+' — a '+money2(e.premium_per_can)+' premium on about '+e.deli_cans_mo+
+      ' cans a month. Adding them to the order you already place is the whole change.';
+    setText('actEnergy', body); setText('actEnergySum', body);
+    setText('insEnergyH','Energy drinks are a real markup — but a smaller one than it looks.');
+    setText('insEnergyT','The deli cans cost you '+money(e.deli_spend_mo)+'/mo at '+money2(e.deli_per_can)+
+      ' against the '+money2(e.bulk_per_can)+' you already pay on Amazon, so moving them is worth about '+
+      yr+'/yr — not the four-figure number this panel used to claim. '+
+      (dd?('The larger story at the counter is frequency, not price: energy drinks are only '+
+           Math.round(e.deli_spend_mo/(dd.total/dd.months)*100)+'% of your '+dd.merchant+' spend.'):''));
+    setText('insFoodEnergyH','Part of "eating out" is energy drinks at a markup.');
+    setText('insFoodEnergyT','About '+e.deli_cans_mo+' cans a month go through the deli at '+money2(e.deli_per_can)+
+      ' instead of the '+money2(e.bulk_per_can)+' you pay in bulk — roughly '+yr+'/yr. Worth fixing, but it is '+
+      'the visit count, not the can price, that makes this category big.');
+  })();
+
+  // ---------- current action priorities: sourced from the refreshed audit ----------
+  (function(){
+    var flags=D.red_flags||[];
+    function pick(re){
+      for(var i=0;i<flags.length;i++) if(re.test(flags[i].title||'')) return flags[i];
+      return null;
+    }
+    function wire(prefix, flag, fallbackDetail, fallbackMetric){
+      var detail=flag&&flag.detail ? flag.detail : fallbackDetail;
+      var metric=flag&&flag.metric ? flag.metric : fallbackMetric;
+      setText(prefix, detail);
+      setText(prefix+'Save', metric);
+    }
+    var points=pick(/Freedom 5% categories/i);
+    wire('actPoints', points,
+      'Activate once per quarter, then route eligible purchases to the Freedom card.', '$240/yr');
+    wire('actPointsSum', points,
+      'Activate once per quarter, then route eligible purchases to the Freedom card.', '$240/yr');
+
+    var transit=pick(/Transit & travel is over budget/i);
+    wire('actTransit', transit,
+      'Separate true travel from everyday transit, then either trim the excess or set an honest target.', '+$35/mo');
+    wire('actTransitSum', transit,
+      'Separate true travel from everyday transit, then either trim the excess or set an honest target.', '+$35/mo');
+  })();
+
+
+  // ---------- portfolio staleness: positions are a snapshot, not a live feed ----------
+  (function(){
+    var host=byId('nwStale'), nw=D.net_worth_detail, q=D.data_quality; if(!host||!nw) return;
+    // The oldest supporting balance governs the honesty of the combined headline. A fresh Vanguard
+    // export must not make an older Fidelity or retirement balance look equally current.
+    var oldest=nw.as_of_oldest||nw.holdings_as_of||nw.as_of, newest=nw.as_of||oldest; if(!oldest) return;
+    var normalized=oldest.length===7?oldest+'-01':oldest;
+    // Compare calendar dates, not elapsed hours: a same-day evening refresh must still read 0 days old.
+    var p=normalized.split('-').map(Number), now=DEMO_TODAY;
+    var asOfDay=Date.UTC(p[0],p[1]-1,p[2]);
+    var today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
+    var days=Math.max(0,Math.round((today-asOfDay)/86400000));
+    if(days<20){
+      host.innerHTML='<div class="insight good"><div class="ic">✅</div><p><span class="h">Balance sources are current.</span>'+
+        'The combined snapshot spans '+oldest+' through '+newest+'; the oldest positive balance is '+days+' days old.</p></div>';
+      return;
+    }
+    host.innerHTML='<div class="insight warn"><div class="ic">🕰️</div><p><span class="h">Mixed-date balance sheet: the oldest account balance is '+days+
+      ' days old.</span>The headline combines sources dated <b>'+oldest+'</b> through <b>'+newest+'</b>. Vanguard may be current while an older Fidelity or retirement snapshot remains unchanged. The total is reconciled to the supplied statements, but it is not a same-day liquidation value. Refresh the older account export before treating small changes as meaningful.</p></div>';
+  })();
+
+
+  // ---------- era comparison: before vs after the points pivot ----------
+  (function(){
+    var E=D.era_analysis, host=byId('eraRows'); if(!E||!host) return;
+    setText('eraLede','Your everyday spending moved onto the Chase Freedom around '+E.pivot_date+
+      '. The obvious comparison — total spend before and after — is misleading twice over, so this '+
+      'strips out the one-time furnishing and cat-setup costs and checks when the rise actually began.');
+    var max=E.eras.reduce(function(m,e){return Math.max(m,e.spend_avg);},1);
+    host.setAttribute('data-max',max);
+    host.innerHTML=E.eras.map(function(e){
+      var hasOne=e.onetime>0;
+      return '<div class="row"><div class="top"><span class="lab">'+e.label+
+        ' <span class="tag var">'+e.first+'–'+e.last+' · '+e.months+' mo</span></span>'+
+        '<span class="val num">'+money(e.spend_avg)+'<span class="mut"> /mo</span></span></div>'+
+        '<div class="track"><div class="bar '+(hasOne?'a':'g')+'" data-val="'+e.spend_avg+'"></div></div>'+
+        '<div class="sub2" style="margin-left:0">'+
+          (hasOne?'<span>of which <b>'+money(e.onetime/e.months)+'/mo</b> one-time</span>'+
+                  '<span>underlying <b>'+money(e.underlying_avg)+'/mo</b></span>':'')+
+          '<span>saved <b>'+money(e.saved_avg)+'/mo</b></span><span>rate <b>'+e.rate_avg+'%</b></span></div></div>';
+    }).join('');
+    var head=E.underlying_delta<0
+      ? 'No — the cards did not make you spend more.'
+      : 'Spending is up, but the cards are not the reason.';
+    setText('eraHeadline',head);
+    setText('eraText',
+      'Headline spend since the pivot is '+money(Math.abs(E.headline_delta))+'/mo '+(E.headline_delta>0?'higher':'lower')+
+      ' than the three months before it. But those months carry the mattress, curtains, Target run and the cat setup. '+
+      'Strip the one-time costs and underlying spending is '+money(Math.abs(E.underlying_delta))+'/mo '+
+      (E.underlying_delta<0?'LOWER':'higher')+' than immediately pre-pivot. '+
+      (E.rise_predates_pivot
+        ? 'And the rise predates the pivot entirely: spending was already well above your first-year baseline three months before you switched cards. '
+        : '')+
+      'Against that first-year baseline you are still running '+money(Math.abs(E.vs_baseline))+'/mo '+
+      (E.vs_baseline>0?'higher':'lower')+' — that is the real structural change, and it has nothing to do with which card you swipe.');
+
+    // category decomposition of the change
+    setText('eraBaseLbl',E.baseline_label); setText('eraRecentLbl',E.recent_label);
+    var ch=byId('eraCats');
+    if(ch){
+      ch.innerHTML=(E.categories||[]).map(function(c){
+        var cls=c.delta>0?'up':'dn';
+        return '<div class="deltarow"'+(c.transient?' style="background:rgba(237,161,0,.06)"':'')+'>'+
+          '<span>'+c.name+(c.transient?' <span class="tag onetime">transient</span>':'')+'</span>'+
+          '<span class="r" style="color:var(--muted);font-weight:600">'+money(c.baseline)+'</span>'+
+          '<span class="r c-avg">'+money(c.recent)+'</span>'+
+          '<span class="r '+cls+'">'+(c.delta>0?'+':'−')+money(Math.abs(c.delta))+'</span></div>';
+      }).join('');
+    }
+    setText('eraSplitH','Most of the increase is already on its way out.');
+    setText('eraSplitT','Of the rise against your first year, '+money(E.transient_delta)+
+      '/mo sits in transient buckets — the apartment furnishing, the Costco.com order, a dental bill, a cash withdrawal. '+
+      'Those do not repeat. The part that actually persists is about '+money(E.structural_delta)+'/mo, and it is '+
+      'mostly cat care (new, ongoing), a rent increase, and modest lifestyle drift across transit, entertainment and the bodega. '+
+      'That is a very different problem from "spending is out of control" — it is a real but small structural step up, '+
+      'on top of a one-time setup year.');
+  })();
+
+
+  // ---------- action plan: written from the two-year record, not from memory ----------
+  (function(){
+    var E=D.era_analysis, q=D.data_quality, su=D.summary;
+    setText('actVerdictH','The two-year record says you are fine.');
+    setText('actVerdictT','Across '+(q.scored_months||q.window_months)+' complete months you kept '+money(su.saved_mo_salary)+
+      '/mo on salary alone — a '+su.savings_rate_salary+'% rate — while three retirement streams fund '+
+      'themselves before you see the money. '+
+      (E?('The recent rise splits into '+money(E.transient_delta)+'/mo of one-time setup and about '+
+          money(E.structural_delta)+'/mo that actually persists. '):'')+
+      'Everything below is tuning, not repair.');
+    setText('actAutopay','Across '+q.window_months+' months of statements there is not one interest charge or '+
+      'late fee on either card, and every autopay has matched the statement balance exactly. This sat on the '+
+      'list as a risk to close — the data closes it. Keep doing exactly what you are doing.');
+    var loan=(D.loans_out||[])[0];
+    if(loan){
+      var due=new Date(loan.due+'T12:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'});
+      var loanText=money(loan.principal)+' is carried as a receivable due '+due+'. The cash left the credit union and '+
+        'went out by Zelle; it is excluded from spending and included in net worth, but it is not spendable today.';
+      setText('actLoan',loanText);
+      setText('openLoanNote',loanText+' Put a reminder one week before the due date and record repayment when it lands.');
+    }
+  })();
+
+
+  // ---------- points / rewards ----------
+  (function(){
+    var R=D.rewards; if(!R) return;
+    // Statement month comes from the parsed rewards block, so this prose never goes stale when a
+    // newer statement PDF is dropped into data/cards.
+    function ptFreedomStmt(R){
+      var c=(R.cards||[]).filter(function(x){return /Freedom/i.test(x.card_name||'');})[0]||(R.cards||[])[0];
+      return (c&&c.statement_date)?c.statement_date:'latest';
+    }
+    function ptStmtLabel(R){
+      var months=(R.cards||[]).map(function(c){return (c.statement_date||'').split(' ')[0];})
+        .filter(function(m,i,a){return m&&a.indexOf(m)===i;});
+      return months.length?months.join(' / '):'latest';
+    }
+    setText('ptStmtDates', ptStmtLabel(R));
+    var st=byId('ptStats');
+    if(st) st.innerHTML=
+      '<div class="stat"><div class="k">Unredeemed, both cards</div><div class="v num">'+money(R.total_value_usd)+'</div><div class="s">'+R.total_points.toLocaleString()+' points</div></div>'+
+      '<div class="stat"><div class="k">Earned last statement</div><div class="v num">'+money(R.earned_value_usd)+'</div><div class="s">'+R.earned_points.toLocaleString()+' points</div></div>'+
+      '<div class="stat'+(R.bonus_activated?'':' bad')+'"><div class="k">Freedom 5% categories</div><div class="v num">'+(R.bonus_activated?'Active':'Never activated')+'</div><div class="s">'+(R.bonus_activated?'earning bonus points':'every point earned at the base 1%')+'</div></div>'+
+      '<div class="stat bad"><div class="k">Left on the table</div><div class="v num">'+money(R.bonus_missed_per_year+R.reroute_gain_yr)+'</div><div class="s">per year, no spending change</div></div>';
+    setText('ptHead', R.bonus_activated?'Bonus categories are active.':'Your Freedom has never had its bonus categories activated.');
+    setText('ptText', R.bonus_activated
+      ? 'Points are landing in bonus categories, so the quarterly activation is being done.'
+      : 'Every point on the '+ptFreedomStmt(R)+' statement came off the "1% on all purchases" line — there is not one '+
+        'bonus-category point on it. Chase gives that card 5% (an extra 4%) on up to '+money(R.bonus_cap)+
+        ' of combined purchases each quarter, but only if you activate it — free — each quarter. You put about '+
+        money(R.quarterly_volume)+' a quarter through the card, so you have far more than enough spend to fill the cap. '+
+        'That is '+money(R.bonus_missed_per_quarter)+' a quarter, '+money(R.bonus_missed_per_year)+
+        ' a year, for a click. It is the largest free item anywhere on this dashboard.');
+    var ch=byId('ptCards');
+    if(ch) ch.innerHTML=R.cards.map(function(c){
+      var lines=c.earn_lines.map(function(e){
+        return '<div class="deltarow"><span>'+e.label+'</span><span class="r"></span><span class="r c-avg">'+e.points.toLocaleString()+' pts</span><span class="r up">'+money(e.points/100)+'</span></div>';}).join('');
+      var idle=c.idle_lines.length? '<p class="note">Earning nothing this period: '+c.idle_lines.join(' · ')+'</p>':'';
+      return '<div class="row" style="margin-bottom:18px"><div class="top"><span class="lab">'+c.card_name+' <span class="tag var">…'+c.card_id+' · statement '+c.statement_date+'</span></span>'+
+        '<span class="val num">'+money(c.value_usd)+'<span class="mut"> available</span></span></div>'+
+        '<div class="sub2" style="margin-left:0"><span>'+c.previous.toLocaleString()+' before</span><span>+'+c.earned.toLocaleString()+' earned</span>'+
+        (c.redeemed?'<span>&minus;'+c.redeemed.toLocaleString()+' redeemed</span>':'')+'<span><b>'+c.total.toLocaleString()+' now</b></span>'+
+        '<span>'+money(c.statement_spend)+' spend &rarr; <b>'+c.blended_rate.toFixed(2)+'%</b> blended</span>'+
+        (c.verified?'<span class="tag good">total cross-checked</span>':'<span class="tag var">total computed</span>')+'</div>'+
+        '<div class="rtable" style="margin-top:8px">'+lines+'</div>'+idle+'</div>';
+    }).join('');
+    var rr=byId('ptReroute');
+    if(rr) rr.innerHTML=(R.reroute||[]).map(function(r){
+      return '<div class="deltarow"><span>'+r.name+'</span><span class="r" style="color:var(--muted);font-weight:600">'+money(r.avg_mo)+'</span>'+
+        '<span class="r c-avg">+'+r.uplift_pct+' pt</span><span class="r up">'+money(r.gain_yr)+'</span></div>';}).join('');
+    setText('ptRerouteNote','The Prime Visa lists 2% back at restaurants and 2% on local transit — both showed zero points '+
+      'this period, meaning that spending is going on the Freedom at 1%. Worth about '+money(R.reroute_gain_yr)+
+      '/yr: small next to the activation, and only worth doing if switching cards for those two is effortless.');
+  })();
+
+
+  // ---------- fixed floor + per-paycheck view ----------
+  (function(){
+    var F=D.fixed_floor, P=D.paycheck_view;
+    if(F&&byId('ffRows')){
+      setText('ffLede','Rent, utilities, insurance, loans, subscriptions and the pharmacy are committed before a single '+
+        'discretionary decision gets made. Separating them shows how much of the paycheck is actually yours to steer.');
+      var mx=F.lines[0]?F.lines[0].amount:1;
+      byId('ffRows').innerHTML=F.lines.map(function(l){
+        return '<div class="row"><div class="top"><span class="lab">'+l.name+'</span><span class="val num">'+money(l.amount)+'<span class="mut"> /mo</span></span></div>'+
+          '<div class="track"><div class="bar g" data-val="'+l.amount+'" style="width:'+(100*l.amount/mx).toFixed(1)+'%"></div></div></div>';}).join('');
+      setText('ffH','About '+F.pct_take_home+'% of your take-home is spoken for before you choose anything.');
+      setText('ffT','The floor is '+money(F.total)+'/mo against '+money(F.take_home_mo)+' of take-home — roughly '+
+        F.checks_to_cover.toFixed(2)+' of your two monthly paychecks just to stand still. What is left after the floor is '+
+        money(F.discretionary)+'/mo, or '+F.pct_spend_discretionary+'% of your spending. Every "cut back" conversation only '+
+        'ever touches that slice, which is why trimming the deli moves the total so little: the big number is not a choice you make monthly.');
+    }
+    if(P&&byId('pvRows')){
+      setText('pvLede','Four of your '+(P.two_check_months+P.three_check_months)+' months carried a third payday. Those months average '+
+        P.three_check_rate+'% against '+P.two_check_rate+'% for two-paycheck months — a '+P.calendar_bonus_pts+
+        '-point swing that is pure calendar, not behaviour. Measuring what you keep per paycheck removes it entirely.');
+      var mx=Math.max.apply(null,P.series.map(function(x){return Math.abs(x.saved_per_check);}))||1;
+      byId('pvRows').innerHTML=P.series.slice(-14).map(function(x){
+        var neg=x.saved_per_check<0;
+        return '<div class="row"><div class="top"><span class="lab">'+x.month+' <span class="tag var">'+x.checks+' checks</span></span>'+
+          '<span class="val num">'+money(x.saved_per_check)+'<span class="mut"> /check · '+x.pct_of_check+'%</span></span></div>'+
+          '<div class="track"><div class="bar '+(neg?'r':'g')+'" style="width:'+(100*Math.abs(x.saved_per_check)/mx).toFixed(1)+'%"></div></div></div>';}).join('');
+    }
+  })();
+
+  // ---------- data quality / provenance ----------
+  (function(){
+    var q=D.data_quality; if(!q) return;
+    setText('dqWindow', q.window_months+' mo');
+    byId('dqAvgMonths') && (byId('dqAvgMonths').innerHTML=q.avg_months+'<small> of '+q.window_months+'</small>');
+    byId('dqNewest') && (byId('dqNewest').innerHTML=q.newest_transaction+'<small> · '+liveAgeLabel(q.newest_transaction)+'</small>');
+    var nw=D.net_worth_detail||{}, v=D.validation||{};
+    setText('dqBalances',(nw.as_of_oldest&&nw.as_of_oldest!==nw.as_of)?nw.as_of_oldest+' → '+nw.as_of:(q.balances_as_of||'—'));
+    setText('dqChecks',v.total!=null?v.passed+'/'+v.total:'—');
+    var b=byId('dqBanner');
+    if(b){
+      b.innerHTML = (q.missing_months||[]).length
+        ? '<div class="insight warn" style="margin-top:0"><div class="ic">⚠️</div><p><span class="h">Missing statement: '+
+          q.missing_months.join(', ')+'.</span>No bank rows exist for '+
+          (q.missing_months.length===1?'that month':'those months')+
+          ', so it is excluded from every average and median rather than counted as a month you barely spent. '+
+          'Drop the matching credit-union statement PDF into <span class="num">data/bank/</span> and rerun to close the gap.</p></div>'
+        : '<div class="insight good" style="margin-top:0"><div class="ic">✅</div><p><span class="h">No gaps.</span>Every month in the window has bank data behind it.</p></div>';
+    }
+    var pending=byId('dqPending');
+    if(pending && (q.pending_manual_count||0)>0){
+      pending.innerHTML='<div class="insight warn" style="margin-top:14px"><div class="ic">🧾</div><p><span class="h">'+q.pending_manual_count+' newer self-reported transaction'+(q.pending_manual_count===1?'':'s')+' totaling '+money(q.pending_manual_total||0)+'.</span>Tracked through '+(q.pending_manual_as_of||'—')+', but kept outside completed-month averages until a bank statement supplies the matching row. The current cash balance already reflects any manual balance adjustment.</p></div>';
+    }
+    var host=byId('dqRows');
+    if(host){
+      var src=(q.bank_sources||[]).map(function(s){return ['Bank',s];})
+        .concat((q.card_sources||[]).map(function(s){return ['Card',s];}));
+      host.innerHTML=src.map(function(p){
+        var s=p[1];
+        return '<div class="rt"><div class="n" style="font-size:14px;font-weight:600">'+p[0]+' · '+s.file+'</div>'+
+          '<div class="amt num" style="font-size:14px">'+s.rows+' rows</div>'+
+          '<div class="d">'+(s.start||'?')+' → '+(s.end||'?')+'</div></div>';
+      }).join('')+
+      '<div class="rt sum"><div class="n">Rows loaded</div><div class="amt num">'+
+        q.rows.bank+' bank · '+q.rows.cards+' card · '+q.rows.amazon+' amazon · '+q.rows.venmo+' venmo · '+q.rows.chewy+' chewy</div></div>';
+    }
+  })();
+
+  // ---------- credit health (manual credit-monitoring snapshot) ----------
+  (function(){
+    var ch = D.credit_health;
+    var host = byId('creditHealthTable');
+    if(!host) return;
+    if(!ch){ host.innerHTML = '<div class="rt"><div class="n">Not available</div><div class="d">No credit_health snapshot in config.yaml yet.</div></div>'; return; }
+    setText('chAsOf', ch.as_of || '—');
+    var standingClass = {EXCELLENT:'g', GOOD:'g', FAIR:'a', NEEDS_WORK:'c', POOR:'c'};
+    var standingLabel = {EXCELLENT:'Excellent', GOOD:'Good', FAIR:'Fair', NEEDS_WORK:'Needs work', POOR:'Poor'};
+    var impactLabel = {HIGH:'high impact', MEDIUM:'medium impact', LOW:'low impact'};
+    var rows = (ch.factors||[]).map(function(f){
+      var cls = standingClass[f.standing]||'g';
+      var tagCls = cls==='g'?'fixed':(cls==='a'?'onetime':'var');
+      return '<div class="rt"><div class="n">'+f.name+' <span class="tag '+tagCls+'">'+(impactLabel[f.impact]||f.impact.toLowerCase())+'</span></div>'+
+        '<div class="amt num">'+(standingLabel[f.standing]||f.standing)+'</div></div>';
+    }).join('');
+    host.innerHTML =
+      '<div class="rt sum"><div class="n">Overall score band</div><div class="amt num">'+(ch.score_band?ch.score_band.charAt(0)+ch.score_band.slice(1).toLowerCase():'—')+'</div>'+
+      '<div class="d">'+(ch.scoring_model||'')+'</div></div>' + rows;
+  })();
+
+  // ---------- net worth (from data/balances/ CSVs) ----------
+  (function(){
+    var nw = D.net_worth_detail;
+    if(!nw) return;
+    var alloc = nw.allocation || {};
+    var tax = nw.by_tax || {};
+    var assets = nw.assets_total || 0;
+
+    var asOfRange=(nw.as_of_oldest&&nw.as_of_oldest!==nw.as_of)?nw.as_of_oldest+' through '+nw.as_of:(nw.as_of||'—');
+    setText('nwAsOf', asOfRange);
+    setText('nwTotal', money(nw.net_total));
+    setText('nwAssets', money(assets));
+    setText('nwLiabilities', money(nw.liabilities_total));
+    setText('nwStocks', money(alloc.stocks||0));
+    setText('nwBonds', money(alloc.bonds||0));
+    setText('nwLiquidCash', money(tax.cash||0));
+    setText('nwAllocCashNote', money(alloc.cash||0));
+    setText('nwLiquidCashNote', money(tax.cash||0));
+    var def=byId('nwDefinition');
+    if(def){
+      var receivable=tax.receivable||0;
+      def.innerHTML='<div class="ic">🧭</div><p><span class="h">One definition everywhere: '+money(assets)+' assets − '+money(nw.liabilities_total)+' liabilities = '+money(nw.net_total)+' statement net worth.</span>'+money(receivable)+' lent to a friend is included in assets because it is owed back, but excluded from the '+money(tax.cash||0)+' spendable-cash figure. The Portfolio Gauge starts from this same statement total, then changes only market-linked positions when prices refresh.</p>';
+    }
+
+    // allocation bars (stocks / bonds / cash)
+    (function(){
+      var host = byId('nwAllocation'); if(!host) return;
+      var rows = [['stocks','Stocks','b'],['bonds','Bonds','v'],['cash','Cash & cash-like (incl. receivable)','g']];
+      var maxv = Math.max(alloc.stocks||0, alloc.bonds||0, alloc.cash||0, 1);
+      host.setAttribute('data-max', maxv);
+      host.innerHTML = rows.map(function(r){
+        var v = alloc[r[0]]||0, pct = assets ? Math.round(v/assets*100) : 0;
+        return rowBar(r[1]+' <span class="tag var">'+pct+'%</span>', v, r[2]);
+      }).join('');
+    })();
+
+    // single-stock concentration callout
+    (function(){
+      var host = byId('nwConcentration'); if(!host) return;
+      var c = nw.concentration || {};
+      if(!c.top_symbol){ host.style.display='none'; return; }
+      host.innerHTML = '<div class="ic">🎯</div><p><span class="h">Single-stock concentration: '+
+        c.top_symbol+' is '+c.top_pct_assets+'% of total assets.</span>'+
+        'You hold '+money(c.single_stock_total)+' in individual stocks ('+c.single_stock_pct_assets+
+        '% of assets) on top of your diversified target-date funds — with <b>'+c.top_symbol+' alone at '+
+        money(c.top_value)+'</b>. That\'s concentrated single-name risk: if one of these names drops hard, '+
+        'it moves your whole net worth in a way the index funds wouldn\'t. Not a problem, just worth watching.</p>';
+    })();
+
+    // tax-bucket split bars
+    (function(){
+      var host = byId('nwTaxSplit'); if(!host) return;
+      var rows = [
+        ['taxable','Taxable brokerage','b','sell anytime; pay capital-gains tax'],
+        ['roth','Roth (tax-free)','g','contributions withdrawable; growth locked till 59½'],
+        ['pretax','Pre-tax (tax-deferred)','v','403(b)/rollover/pension; taxed on withdrawal'],
+        ['receivable','Lent out (receivable)','a','owed back to you on a date; not spendable today'],
+        ['cash','Cash / bank','a','no market risk, instantly available']
+      ];
+      var maxv = Math.max.apply(null, rows.map(function(r){return tax[r[0]]||0;}).concat([1]));
+      host.setAttribute('data-max', maxv);
+      host.innerHTML = rows.filter(function(r){return (tax[r[0]]||0)>0;}).map(function(r){
+        var v = tax[r[0]]||0, pct = assets ? Math.round(v/assets*100) : 0;
+        return '<div class="row"><div class="top"><span class="lab">'+r[1]+' <span class="tag var">'+pct+'%</span></span>'+
+          '<span class="val num">'+money(v)+'</span></div><div class="track"><div class="bar '+r[2]+'" data-val="'+v+'"></div></div>'+
+          '<p class="note" style="margin:6px 0 0;font-size:13px">'+r[3]+'</p></div>';
+      }).join('');
+    })();
+
+    // individual stock positions table
+    (function(){
+      var host = byId('nwHoldings'); if(!host) return;
+      var h = nw.holdings || [];
+      if(!h.length){ host.innerHTML = '<div class="rt"><div class="n">No individual stock holdings</div></div>'; return; }
+      host.innerHTML = h.map(function(x){
+        var pct = assets ? (Math.round(x.value/assets*1000)/10) : 0;
+        return '<div class="rt"><div class="n">'+x.symbol+'</div><div class="amt num">'+money(x.value)+'</div>'+
+          '<div class="d">'+pct+'% of total assets</div></div>';
+      }).join('') + '<div class="rt sum"><div class="n">Total individual stocks</div><div class="amt num">'+
+        money(nw.concentration.single_stock_total)+'</div></div>';
+    })();
+
+    // accounts table
+    (function(){
+      var host = byId('nwAccounts'); if(!host) return;
+      var bucketTag = {taxable:'Taxable', roth:'Roth', pretax:'Pre-tax', cash:'Cash', receivable:'Lent out'};
+      // An account's age belongs next to its balance. "Positions are current" is true of the
+      // Vanguard export and false of a two-month-old Fidelity statement, and only the per-row
+      // date makes clear which part of this total is a fact and which part is a memory.
+      var today = new Date(D.generated_at || Date.now());
+      function ageChip(iso){
+        if(!iso) return '';
+        var d = new Date(iso + (iso.length === 7 ? '-01' : '') + 'T00:00:00');
+        if(isNaN(d)) return '';
+        var days = Math.max(0, Math.round((today - d) / 86400000));
+        var cls = days > 45 ? 'bad' : (days > 20 ? 'warn' : 'ok');
+        var col = cls === 'bad' ? 'var(--down)' : (cls === 'warn' ? 'var(--amber)' : 'var(--faint)');
+        var lab = days === 0 ? 'today' : (days === 1 ? '1 day old' : days + ' days old');
+        return ' · <span style="color:'+col+'">as of '+iso+' · '+lab+'</span>';
+      }
+      host.innerHTML = (nw.accounts||[]).map(function(a){
+        return '<div class="rt"><div class="n">'+a.name+' <span class="tag var">'+(a.institution||'')+'</span></div>'+
+          '<div class="amt num">'+money(a.balance)+'</div>'+
+          '<div class="d">'+(bucketTag[a.tax_bucket]||a.tax_bucket)+(a.fund?(' · '+a.fund):'')+ageChip(a.as_of)+'</div></div>';
+      }).join('') + '<div class="rt sum"><div class="n">Total assets</div><div class="amt num">'+money(assets)+'</div></div>';
+    })();
+
+    // liabilities table
+    (function(){
+      var host = byId('nwLiabilitiesTable'); if(!host) return;
+      host.innerHTML = (nw.liabilities||[]).map(function(l){
+        return '<div class="rt"><div class="n">'+l.name+'</div><div class="amt num">'+money(l.balance)+'</div>'+
+          '<div class="d">'+money(l.monthly_payment)+'/mo · as of '+(l.as_of||'—')+
+          (l.balance_kind?(' · '+l.balance_kind+' balance'):'')+'</div></div>';
+      }).join('') + '<div class="rt sum"><div class="n">Total liabilities</div><div class="amt num">'+money(nw.liabilities_total)+'</div></div>';
+    })();
+
+    // unfunded / open-but-empty accounts (tax-advantaged space)
+    (function(){
+      var host = byId('nwUnfunded'); if(!host) return;
+      var u = nw.unfunded_accounts || [];
+      if(!u.length){ host.style.display='none'; return; }
+      host.className = 'insight';
+      var h457 = (D.paycheck||{}).headroom_457b || 0;
+      host.innerHTML = '<div class="ic">📭</div><p><span class="h">'+u.length+' open accounts sitting at $0.</span>'+
+        u.map(function(a){return a.name;}).join(', ')+'. Your 457(b) alone is ~$'+Math.round(h457/1000)+'k/yr of unused tax-advantaged space — '+
+        'a separate limit from your 403(b), so it\'s room you haven\'t tapped yet.</p>';
+    })();
+
+    var ic = D.insurance_coverage;
+    var gapHost = byId('nwInsuranceGaps');
+    if(gapHost && ic){
+      var gaps = [];
+      if(!ic.disability_short_term && !ic.disability_long_term) gaps.push('short- or long-term disability');
+      else if(!ic.disability_long_term) gaps.push('long-term disability');
+      else if(!ic.disability_short_term) gaps.push('short-term disability');
+      if(!ic.life_insurance) gaps.push('life insurance');
+      if(gaps.length){
+        gapHost.innerHTML = '<div class="insight warn" style="margin-top:14px"><div class="ic">⚠️</div><p>'+
+          '<span class="h">Coverage gap: no '+gaps.join(' or ')+' insurance.</span>'+
+          'If you couldn\'t work due to illness or injury, none of your income would be replaced — your '+
+          money((tax.cash||0)+(tax.taxable||0))+' in liquid net worth (cash + taxable brokerage, plus the emergency-runway calculator) '+
+          'would be the entire backstop. Worth pricing out, especially since you help support family.</p></div>';
+      } else {
+        gapHost.innerHTML = '';
+      }
+    }
+  })();
+
+  // ---------- paycheck ----------
+  (function(){
+    var pc=D.paycheck||{};
+    var host=byId('paycheckchart');
+    if(host && pc.gross_per_check){
+      host.setAttribute('data-max', pc.gross_per_check);
+      var pctOf=function(v){return Math.round(v/pc.gross_per_check*100);};
+      host.innerHTML =
+        rowBar('Take-home — lands in your account <span class="tag var">'+pctOf(pc.take_home_per_check)+'%</span>', pc.take_home_per_check, 'g') +
+        rowBar('Taxes — fed, Soc. Sec., Medicare, state, local <span class="tag onetime">'+pctOf(pc.taxes_per_check)+'%</span>', pc.taxes_per_check, 'c') +
+        rowBar('Retirement — 403(b) + county pension <span class="tag fixed">'+pctOf(pc.retirement_per_check)+'%</span>', pc.retirement_per_check, 'b') +
+        rowBar('Union dues (OSA) <span class="tag var">'+pctOf(pc.dues_per_check)+'%</span>', pc.dues_per_check, 'v');
+    }
+    setText('pcGrossAnnual', money(pc.annual&&pc.annual.gross));
+    setText('pcGrossCheck', money(pc.gross_per_check));
+    setText('pcAnnGross', money(pc.annual&&pc.annual.gross));
+    setText('pcAnnTakeHome', money(pc.annual&&pc.annual.take_home));
+    setText('pcAnnTaxes', money(pc.annual&&pc.annual.taxes));
+    setText('pcAnn403b', money(pc.annual&&pc.annual.contrib_403b));
+    setText('pcAnnPension', money(pc.annual&&pc.annual.pension));
+    setText('pcAnnDues', money(pc.annual&&pc.annual.union_dues));
+    var forced=(pc.annual&&pc.annual.contrib_403b||0)+(pc.annual&&pc.annual.pension||0);
+    setText('pcForcedSavings', money(forced));
+    setText('pcForced403b', money(pc.annual&&pc.annual.contrib_403b));
+    setText('pcForcedPension', money(pc.annual&&pc.annual.pension));
+    setText('pcGrossRate2', Math.round((D.summary||{}).savings_rate_gross));
+    setText('pcHeadroom', '$'+Math.round((pc.headroom_403b||0)/1000)+'k');
+    setText('pcAnn403bShort', money(pc.annual&&pc.annual.contrib_403b));
+    setText('pcCapitalDeployed', money((D.summary||{}).capital_deployed));
+  })();
+
+  // ---------- categories tab extras ----------
+  (function(){
+    setText('catFamily', money((D.summary||{}).family_mo));
+    var vd=D.venmo_decode||{};
+    setText('catFruitRuns', vd.fruit_runs!=null?vd.fruit_runs:'—');
+    var host=byId('venmodecoderows');
+    if(host){
+      var rows=[
+        ['Shared meals with friends','shared_meals','g'],
+        ['Movies with '+((D.entities&&D.entities.movie_buddy)||'friends'),'movies','v'],
+        ['Fruit cart'+(vd.vendor?(' — '+vd.vendor):''),'fruit','a']
+      ];
+      var maxv=Math.max(vd.shared_meals||0,vd.movies||0,vd.fruit||0,1);
+      host.setAttribute('data-max', maxv);
+      host.innerHTML = rows.map(function(r){return rowBar(r[0], vd[r[1]]||0, r[2]);}).join('');
+    }
+  })();
+
+  // ---------- food ----------
+  (function(){
+    var food=D.food||{}, b=food.before||{}, a=food.after||{};
+    setText('foodBeforeGroc', money(b.groceries_mo||0));
+    setText('foodBeforeOut', money(b.eating_out_mo||0));
+    setText('foodBeforeTotal', money((b.groceries_mo||0)+(b.eating_out_mo||0)));
+    setText('foodAfterGroc', money(a.groceries_mo||0));
+    setText('foodAfterOut', money(a.eating_out_mo||0));
+    setText('foodAfterTotal', money((a.groceries_mo||0)+(a.eating_out_mo||0)));
+    setText('foodEatBefore2', money(b.eating_out_mo||0));
+    setText('foodEatAfter2', money(a.eating_out_mo||0));
+    setText('foodEatPct', (b.eating_out_mo||0)>0?Math.round((1-(a.eating_out_mo||0)/(b.eating_out_mo||1))*100)+'%':'—');
+  })();
+
+  // ---------- recurring ----------
+  (function(){
+    var NOTES={
+      'anthropic':'…this, basically. Probably earning its keep.',
+      'hbomax':'Streaming — confirm you still watch enough to justify it.',
+      'spotify':'Steady month over month — you use it heavily.',
+      'amazon prime':'Billed annually. Reasonable given your order volume.',
+      'apple.com/bill':'Apple billing — storage/subscription tier.',
+      'havenbrook':'Your anchor cost.',
+      'ridgeline':'Largest medical recurring cost · worth periodically confirming it still earns its place.',
+      'granite state':'Federal student loan servicer.',
+      'cornerstone life':'Life insurance — billed quarterly.',
+      'bluepine':'Web hosting — confirm still in use.',
+      'domainworks':'Domain registrar — confirm still in use.',
+      'lakeview power':'Electric utility.',
+      'northline gas':'Gas utility.',
+      'vantel':'Internet.',
+      'mint mobile':'Phone.',
+      'netflix':'Streaming — confirm you still watch enough to justify it.'
+    };
+    function cadChip(item){
+      if(!item.confirmed) return ' <span class="cad maybe">single charge</span>';
+      var c=item.cadence||'';
+      if(!c||c==='monthly') return ' <span class="cad">monthly</span>';
+      return ' <span class="cad '+(c==='annual'?'annual':(c==='quarterly'?'quarterly':''))+'">'+c+'</span>';
+    }
+    function rtRow(item){
+      var key=item.name.toLowerCase();
+      var ended=!item.active;
+      var note;
+      if(ended){
+        note='Ended — last charge '+item.latest_date+'. No longer billing you; excluded from totals.';
+      } else {
+        note=NOTES[key]||( item.confirmed ? 'Recurring charge — worth a periodic glance.'
+          : 'Seen once ('+item.latest_date+') — could be a one-time purchase; excluded from totals until it repeats.');
+        if(item.price_change){
+          var pc=item.price_change;
+          note+=' <span class="creepnote">▲ Price went up: '+money2(pc.from)+' → '+money2(pc.to)+' (+'+Math.round(pc.pct)+'%) since '+pc.since+'.</span>';
+        }
+      }
+      return '<div class="rt'+(ended?' ended':'')+'"><div class="n">'+item.name+cadChip(item)+'</div>'+
+        '<div class="amt num">'+money2(item.avg_mo)+'<span class="mut">/mo</span></div><div class="d">'+note+'</div></div>';
+    }
+    function table(host, items, sumLabel, sumNote){
+      if(!host) return;
+      var live=items.filter(function(r){return r.active;});
+      var dead=items.filter(function(r){return !r.active;});
+      var subtotal=live.reduce(function(a,r){return a+(r.confirmed?r.avg_mo:0);},0);
+      host.innerHTML = live.map(rtRow).join('') +
+        '<div class="rt sum"><div class="n">'+sumLabel+'</div><div class="amt num">~'+money(subtotal)+'<span class="mut">/mo</span></div><div class="d">'+sumNote+'</div></div>' +
+        dead.map(rtRow).join('');
+    }
+    var recurring=D.recurring||[];
+    var subs=recurring.filter(function(r){return r.category==='subscriptions';});
+    var bills=recurring.filter(function(r){return r.category!=='subscriptions';});
+    table(byId('subsTable'), subs, 'Subtotal — active subscriptions',
+      'Confirmed automatic charges only; annual bills spread monthly. Single unconfirmed charges and ended services are excluded.');
+    table(byId('billsTable'), bills, 'Subtotal — active bills',
+      'Rent, utilities, loans, insurance — the confirmed fixed base your budget sits on.');
+    var ridgeline=recurring.find(function(r){return r.name.toLowerCase()==='ridgeline'&&r.active;});
+    setText('recRidgeline Rx', money(ridgeline?ridgeline.avg_mo:0));
+    var totalHost=byId('recActiveTotal');
+    if(totalHost && D.recurring_active_mo!=null) totalHost.textContent=money(D.recurring_active_mo);
+  })();
+
+  // ---------- amazon ----------
+  (function(){
+    var amz=D.amazon||{};
+    setText('amzItems', amz.total_items!=null?amz.total_items:'—');
+    setText('amzTotal', money(amz.total_spend||0));
+    setText('amzAvgMo', money(amz.avg_mo||0));
+    var cov=(D.coverage||{}).amazon||{};
+    setText('amzWindow', cov.start&&cov.end?(cov.start+' – '+cov.end):'—');
+    var host=byId('amazonrows');
+    if(host){
+      var cats=amz.by_category||[];
+      var maxv=cats.reduce(function(m,c){return Math.max(m,c.avg_mo);},1);
+      host.setAttribute('data-max', maxv);
+      host.innerHTML = cats.map(function(c){return rowBar(c.name.replace(/_/g,' '), c.avg_mo, 'g');}).join('');
+    }
+    var bt=byId('amazonBigTicket');
+    if(bt){
+      bt.innerHTML = (amz.big_ticket||[]).map(function(r){
+        return '<div class="rt"><div class="n">'+r.description+'</div><div class="amt num">'+money(r.amount)+'</div><div class="d">'+r.date+'</div></div>';
+      }).join('') || '<div class="rt"><div class="n">None over $100</div><div class="amt num">—</div></div>';
+    }
+  })();
+
+  // ---------- footer ----------
+  (function(){
+    var cov=D.coverage||{}, s=D.summary||{}, pc=D.paycheck||{}, q=D.data_quality||{}, v=D.validation||{};
+    var bank=cov.bank||{}, cards=cov.cards||{}, amazon=cov.amazon||{}, audit=cov.email_audits||{};
+    var amAudit=audit.amazon||{}, chAudit=audit.chewy||{};
+    byId('footText').innerHTML = '<b>Data coverage:</b> Credit cards span '+(cards.start||'—')+' – '+(cards.end||'—')+
+      '. Amazon spans '+(amazon.start||'—')+' – '+(amazon.end||'—')+
+      (audit.as_of?('. Email audit through '+audit.as_of+': '+(chAudit.confirmed_orders_ytd||0)+' Chewy orders reconciled with '+
+        (chAudit.missing_orders||0)+' missing; '+(amAudit.orders_reconciled_in_latest_export||0)+' late-August Amazon orders verified in the '+
+        (amAudit.latest_export_as_of||audit.as_of)+' export ('+money(amAudit.item_subtotal_reconciled||0)+' item subtotal; '+
+        money(amAudit.charged_total_verified||0)+' charged including tax)'):'')+
+      '. The credit-union export reaches back only to <b>'+(bank.start||'—')+'</b>, so completed-history income, rent, and spending figures cover '+(bank.start||'—')+' – '+(bank.end||'—')+' ('+(bank.months||'—')+' months). '+
+      ((q.pending_manual_count||0)?(money(q.pending_manual_total||0)+' of self-reported activity through '+(q.pending_manual_as_of||'—')+' is displayed separately until it appears in a statement. '):'')+
+      'Verified against paystubs: paid <b>bi-weekly (26×/yr)</b> on '+money(s.gross_annual)+', net '+money2(pc.take_home_per_check)+'/check (~'+money(s.take_home_mo)+'/mo), with '+money(s.auto_retirement_mo)+'/mo auto-deducted for 403(b) + pension. Spending is accrual-basis; internal savings↔checking transfers excluded; family gifts and investment transfers handled separately. Figures rounded. Generated '+((D.generated_at||'').slice(0,10))+' by update.py from your statements.';
+  })();
+
+  // ---------- tabs ----------
+  var tabs=[].slice.call(document.querySelectorAll('.tab'));
+  function show(id){
+    document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('active',p.id===id)});
+    tabs.forEach(function(t){t.setAttribute('aria-selected', t.dataset.tab===id?'true':'false')});
+    window.scrollTo({top:0,behavior:'auto'});
+    paintAll();
+  }
+  tabs.forEach(function(t,i){
+    t.addEventListener('click',function(){show(t.dataset.tab)});
+    t.addEventListener('keydown',function(e){
+      if(e.key==='ArrowRight'||e.key==='ArrowLeft'){
+        e.preventDefault();
+        var n=(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;
+        tabs[n].focus(); show(tabs[n].dataset.tab);
+      }
+    });
+  });
+
+  // ---------- builders ----------
+  function rowBar(lab,val,cls,sub){
+    return '<div class="row"><div class="top"><span class="lab">'+lab+'</span><span class="val num">'+money(val)+(sub?' <span class="mut">'+sub+'</span>':'')+'</span></div>'+
+           '<div class="track"><div class="bar '+cls+'" data-val="'+val+'"></div></div></div>';
+  }
+  // duo
+  (function(){var h=document.getElementById('duo');if(!h)return;
+    var max=Math.max.apply(null,DUO.map(function(d){return Math.max(d[1]||0,d[2]||0);}).concat([1]));
+    DUO.forEach(function(d){
+      h.innerHTML+='<div class="row"><div class="top"><span class="lab">'+d[0]+
+      '</span><span class="val num">+'+money(d[1]-d[2])+' <span class="mut">kept</span></span></div>'+
+      '<div class="pair"><div class="miniwrap"><span class="mtag">In</span><div class="mtrack"><div class="bar g" data-w="'+(d[1]/max*100)+'"></div></div><span class="mval num">'+money(d[1])+'</span></div>'+
+      '<div class="miniwrap"><span class="mtag">Out</span><div class="mtrack"><div class="bar c" data-w="'+(d[2]/max*100)+'"></div></div><span class="mval num">'+money(d[2])+'</span></div></div></div>';
+    });
+  })();
+  // ---------- income basis: salary only vs all income ----------
+  // Every savings figure on the dashboard reads from BASIS. "Salary only" is the default because a
+  // windfall landing in one month makes that month look structurally better than it was, and the
+  // question worth answering is whether the paycheck alone covers the life.
+  (function(){
+    var bs=byId('basisSalary'), ba=byId('basisAll'), why=byId('basisWhy');
+    if(!bs||!ba) return;
+    var ns=(D.summary||{}).nonsalary_total||0;
+    var items=((D.savings_stats||{}).nonsalary_items)||[];
+    function apply(){
+      bs.classList.toggle('on', isSalary()); ba.classList.toggle('on', !isSalary());
+      bs.setAttribute('aria-pressed', isSalary()); ba.setAttribute('aria-pressed', !isSalary());
+      if(why){
+        why.innerHTML = isSalary()
+          ? 'Savings measured against <b>your paycheck alone</b>. '+(ns>0
+              ? money(ns)+' of non-payroll money'+(items.length?' ('+items.map(function(i){return (i.label||i.desc)+' '+money(i.amount);}).join(', ')+')':'')+' is excluded.'
+              : 'No non-payroll income in this window.')
+          : 'Savings measured against <b>every dollar that arrived</b>, payroll or not'+(ns>0?' — including '+money(ns)+' that wasn\'t salary':'')+'.';
+      }
+      BASIS_LISTENERS.forEach(function(fn){ try{fn();}catch(e){} });
+    }
+    bs.addEventListener('click',function(){BASIS='salary';apply();});
+    ba.addEventListener('click',function(){BASIS='all';apply();});
+    onBasis(function(){ if(typeof paintAll==='function') setTimeout(paintAll,20); });
+    setTimeout(apply,0);
+  })();
+
+  // ---------- savings history: bars + 3-month rolling line ----------
+  (function(){
+    var H=D.savings_history||[], S=D.savings_stats||{};
+    var host=byId('shchart'); if(!host||!H.length) return;
+    function draw(){
+      var rateK=bKey('rate_salary','rate'), rollK=bKey('roll3_salary','roll3');
+      var med=isSalary()?S.median_salary:S.median;
+      setText('shMedian', Math.round(med)+'%');
+      var W=Math.max(620, H.length*44), Hh=250, padL=44, padR=14, padT=18, padB=34;
+      var vals=H.map(function(r){return r[rateK];}).concat(H.map(function(r){return r[rollK];}));
+      var lo=Math.min(0, Math.floor(Math.min.apply(null,vals)/10)*10);
+      var hi=Math.max(50, Math.ceil(Math.max.apply(null,vals)/10)*10);
+      var y=function(v){return padT+(hi-v)/(hi-lo)*(Hh-padT-padB);};
+      var bw=(W-padL-padR)/H.length;
+      var s='<svg viewBox="0 0 '+W+' '+Hh+'" role="img" aria-label="Savings rate by month">';
+      for(var g=lo; g<=hi; g+=10){
+        s+='<line x1="'+padL+'" y1="'+y(g)+'" x2="'+(W-padR)+'" y2="'+y(g)+'" stroke="#e5e1d7" stroke-width="1"/>'+
+           '<text x="'+(padL-7)+'" y="'+(y(g)+4)+'" fill="#616975" font-size="11" text-anchor="end">'+g+'%</text>';
+      }
+      s+='<line x1="'+padL+'" y1="'+y(0)+'" x2="'+(W-padR)+'" y2="'+y(0)+'" stroke="#cfcabd" stroke-width="1.5"/>';
+      H.forEach(function(r,i){
+        var v=r[rateK], x=padL+i*bw+bw*0.18, w=bw*0.64;
+        var top=Math.min(y(v),y(0)), h=Math.max(1.5,Math.abs(y(v)-y(0)));
+        var col=v>=med?'#17734a':'#b52d2d';
+        // hollow top marks a 3-paycheck month -- the rate is flattered by an extra check, not by behavior
+        var three=r.n_paychecks>=3;
+        s+='<rect x="'+x+'" y="'+top+'" width="'+w+'" height="'+h+'" rx="3" fill="'+col+'" fill-opacity="'+(three?0.35:0.85)+'"'+
+           (three?' stroke="'+col+'" stroke-width="1.5"':'')+'><title>'+r.month+': '+v+'%  ·  kept '+moneyS(r[bKey('saved_salary','saved')])+
+           '  ·  '+r.n_paychecks+' paycheck'+(r.n_paychecks===1?'':'s')+'</title></rect>';
+        if(i%2===0||H.length<=14){
+          s+='<text x="'+(x+w/2)+'" y="'+(Hh-12)+'" fill="#616975" font-size="10.5" text-anchor="middle">'+r.month+'</text>';
+        }
+      });
+      s+='<line x1="'+padL+'" y1="'+y(med)+'" x2="'+(W-padR)+'" y2="'+y(med)+'" stroke="#616975" stroke-width="1.5" stroke-dasharray="5 4"/>';
+      var pts=H.map(function(r,i){return (padL+i*bw+bw/2).toFixed(1)+','+y(r[rollK]).toFixed(1);}).join(' ');
+      s+='<polyline points="'+pts+'" fill="none" stroke="#2f66e0" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+      H.forEach(function(r,i){
+        s+='<circle cx="'+(padL+i*bw+bw/2)+'" cy="'+y(r[rollK])+'" r="3" fill="#2f66e0"><title>'+r.month+' 3-mo avg: '+r[rollK]+'%</title></circle>';
+      });
+      s+='</svg>';
+      host.innerHTML=s;
+
+      // narrative: is the trend up or down, and by how much?
+      var n=H.length, recent=H[n-1][rollK], older=H[Math.max(0,n-7)][rollK];
+      var d=recent-older, falling=d<-2, rising=d>2;
+      setText('shHeadline', falling?'Your savings rate has been sliding for six months.'
+             : rising?'Your savings rate is climbing.' : 'Your savings rate is holding steady.');
+      setText('shText',
+        'The 3-month average went from '+older.toFixed(1)+'% ('+H[Math.max(0,n-7)].month+') to '+recent.toFixed(1)+'% ('+H[n-1].month+')'+
+        (falling?' — a '+Math.abs(d).toFixed(1)+'-point drop. Income is flat, so this is entirely the spending side: '
+                +'six straight months of paying for the apartment and the cat. Worth watching whether it recovers now that the setup costs are behind you.'
+         : rising?' — up '+d.toFixed(1)+' points.'
+         : '. '+ (isSalary()?'On salary alone, ':'')+'you have run negative in '+S.months_negative+' of '+S.months_total+' months.'));
+      byId('shInsight') && byId('shInsight').classList.toggle('warn', falling);
+
+      // dollars chart
+      var dh=byId('shdollars');
+      if(dh){
+        var savedK=bKey('saved_salary','saved'), cumK=bKey('cum_saved_salary','cum_saved');
+        var dvals=H.map(function(r){return r[savedK];});
+        var dlo=Math.min(0,Math.min.apply(null,dvals)), dhi=Math.max.apply(null,dvals);
+        var cmax=Math.max.apply(null,H.map(function(r){return r[cumK];}))||1;
+        var yy=function(v){return padT+(dhi-v)/((dhi-dlo)||1)*(Hh-padT-padB);};
+        var ds='<svg viewBox="0 0 '+W+' '+Hh+'" role="img" aria-label="Dollars kept by month">';
+        ds+='<line x1="'+padL+'" y1="'+yy(0)+'" x2="'+(W-padR)+'" y2="'+yy(0)+'" stroke="#cfcabd" stroke-width="1.5"/>';
+        ds+='<text x="'+(padL-7)+'" y="'+(yy(dhi)+4)+'" fill="#616975" font-size="11" text-anchor="end">'+moneyK(dhi)+'</text>';
+        ds+='<text x="'+(padL-7)+'" y="'+(yy(0)+4)+'" fill="#616975" font-size="11" text-anchor="end">$0</text>';
+        H.forEach(function(r,i){
+          var v=r[savedK], x=padL+i*bw+bw*0.18, w=bw*0.64;
+          var top=Math.min(yy(v),yy(0)), h=Math.max(1.5,Math.abs(yy(v)-yy(0)));
+          ds+='<rect x="'+x+'" y="'+top+'" width="'+w+'" height="'+h+'" rx="3" fill="'+(v>=0?'#17734a':'#b52d2d')+'" fill-opacity="0.85">'+
+              '<title>'+r.month+': '+moneyS(v)+'</title></rect>';
+          if(i%2===0||H.length<=14) ds+='<text x="'+(x+w/2)+'" y="'+(Hh-12)+'" fill="#616975" font-size="10.5" text-anchor="middle">'+r.month+'</text>';
+        });
+        var cpts=H.map(function(r,i){return (padL+i*bw+bw/2).toFixed(1)+','+(padT+(1-r[cumK]/cmax)*(Hh-padT-padB)).toFixed(1);}).join(' ');
+        ds+='<polyline points="'+cpts+'" fill="none" stroke="#6a4bb8" stroke-width="2.5" stroke-dasharray="4 3"/>';
+        ds+='<text x="'+(W-padR)+'" y="'+(padT+10)+'" fill="#6a4bb8" font-size="11.5" text-anchor="end" font-weight="700">running total '+moneyK(H[n-1][cumK])+'</text>';
+        ds+='</svg>';
+        dh.innerHTML=ds;
+      }
+
+      var tb=byId('shTable');
+      if(tb){
+        tb.innerHTML=H.slice().reverse().map(function(r){
+          var v=r[bKey('saved_salary','saved')], rt=r[rateK];
+          return '<div class="deltarow"><span>'+r.month+(r.n_paychecks>=3?' <span class="tag var">3 checks</span>':'')+'</span>'+
+            '<span class="r '+(v>=0?'dn':'up')+'">'+moneyS(v)+'</span>'+
+            '<span class="r c-avg">'+rt+'%</span>'+
+            '<span class="r">'+moneyK(r[bKey('cum_saved_salary','cum_saved')])+'</span></div>';
+        }).join('');
+      }
+    }
+    draw(); onBasis(draw);
+  })();
+
+  // ---------- this month in review ----------
+  (function(){
+    var m=D.month_review; var pane=byId('thismonth'); if(!pane||!m) return;
+    function draw(){
+      var sal=isSalary();
+      var rate=sal?m.rate_salary:m.rate, saved=sal?m.saved_salary:m.saved;
+      var inc=sal?m.salary:m.income;
+      setText('mrTitle', m.month);
+      setText('mrLede',
+        (m.partial?'Through '+m.as_of+' — day '+m.days_elapsed+' of '+m.days_in_month+', so '+m.days_left+' day'+(m.days_left===1?'':'s')+' of spending and '
+          +(m.checks_expected>m.checks_landed?('one more paycheck ('+m.checks_expected+' total this month) '):'')+'are still to come. '
+         :'Complete month. ')+
+        (sal?'Measured against salary only.':'Measured against all income that arrived.'));
+      var el=byId('mrRate');
+      if(el){ el.textContent=(rate<0?'−':'')+Math.abs(Math.round(rate))+'%'; el.className='big num '+(rate>=25?'good-n':(rate>=10?'warn-n':'bad-n')); }
+      setText('mrRateLabel', 'of '+(sal?'your paycheck':'income')+' kept so far'+(m.partial?' (month still running)':''));
+      setText('mrIncomeLabel', sal?'Salary in':'All income in');
+      setText('mrIncome', money(inc));
+      setText('mrSpend', money(m.spend));
+      setText('mrFamily', money(m.family));
+      var sv=byId('mrSaved');
+      if(sv){ sv.textContent=moneyS(saved); sv.className='v num '+(saved>=0?'good-n':'bad-n'); }
+      setText('mrChecks', m.checks_landed+(m.checks_expected>m.checks_landed?' of '+m.checks_expected:''));
+      var vs=m.spend-m.trailing_spend_avg, va=byId('mrVsAvg');
+      if(va){ va.innerHTML=(vs>=0?'+':'−')+money(Math.abs(vs))+'<small> spending</small>'; va.className='v num '+(vs>0?'bad-n':'good-n'); }
+
+      setText('mrVerdict', '');
+      var vd=byId('mrVerdict');
+      if(vd){
+        vd.innerHTML='You spent <b>'+money(m.spend)+'</b> against a 12-month average of <b>'+money(m.trailing_spend_avg)+'</b>'+
+          (vs>0?' — <b>'+money(vs)+' more than usual</b>.':' — <b>'+money(-vs)+' less than usual</b>.')+
+          ' On '+(sal?'salary alone':'all income')+' that leaves <b>'+moneyS(saved)+'</b>'+
+          (saved<0?', i.e. this month has not paid for itself yet.':'.')+
+          ' Your trailing 12-month average salary-only rate is <b>'+m.trailing_rate_salary_avg+'%</b>.';
+      }
+      var projEl=byId('mrProjText');
+      projEl && (projEl.innerHTML =
+        m.partial
+          ? 'At your observed run-rate of '+money(m.daily_var_spend)+'/day (excluding rent, which already landed), the remaining '
+            +m.days_left+' day'+(m.days_left===1?'':'s')+' add about '+money(m.projected_spend-m.spend)+'. With '+m.checks_expected
+            +' paychecks in the month, '+m.month+' should close near <b>'+moneyS(m.projected_saved)+' kept — a '+m.projected_rate
+            +'% salary-only rate</b>. That is the number to judge the month by.'
+          : 'The month is complete: '+moneyS(saved)+' kept on '+money(inc)+' in.');
+      byId('mrProjection') && (byId('mrProjection').style.display = m.partial?'':'none');
+
+      var wf=byId('mrWindfall');
+      if(wf){
+        if((m.nonsalary_items||[]).length){
+          wf.style.display='';
+          setText('mrWindfallText',
+            m.nonsalary_items.map(function(i){
+              return money(i.amount)+' — '+(i.label||i.desc)+' ('+i.date+')'+(i.note?'. '+i.note:'')+
+                     (i.recurring===false?' Not repeatable.':'');
+            }).join(' ')+
+            ' It is '+(sal?'excluded from the figures above':'included in the figures above')+
+            ' — flip the switch at the top to see it the other way. Counting it lifts this month to '+Math.round(m.rate)+
+            '%, but one-time money says nothing about whether your spending fits your income, so the salary-only view is the one to trust.');
+        } else { wf.style.display='none'; }
+      }
+
+      setText('mrTrailN', m.trailing_months);
+      var dh=byId('mrDeltas');
+      if(dh){
+        dh.innerHTML=(m.cat_deltas||[]).map(function(c){
+          return '<div class="deltarow"><span>'+c.name+'</span>'+
+            '<span class="r">'+money(c.amount)+'</span>'+
+            '<span class="r c-avg" style="color:var(--muted);font-weight:600">'+money(c.avg)+'</span>'+
+            '<span class="r '+(c.delta>0?'up':'dn')+'">'+(c.delta>0?'+':'−')+money(Math.abs(c.delta))+'</span></div>';
+        }).join('')||'<div class="deltarow"><span>Nothing moved much this month.</span><span></span><span></span><span></span></div>';
+      }
+      var ups=(m.cat_deltas||[]).filter(function(c){return c.delta>0;}).slice(0,3);
+      var dns=(m.cat_deltas||[]).filter(function(c){return c.delta<0;}).slice(0,2);
+      setText('mrDriverText',
+        (ups.length? ups.map(function(c){return c.name+' ran '+money(c.delta)+' hot';}).join(', ')+'. ':'')+
+        (dns.length? 'Offset by '+dns.map(function(c){return c.name+' down '+money(-c.delta);}).join(' and ')+'. ':'')+
+        'Net, spending was '+money(Math.abs(vs))+(vs>0?' above':' below')+' your usual month.');
+
+      function monthEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+      var purchases=m.purchase_groups||[], ph=byId('mrPurchaseRows');
+      if(ph){
+        ph.innerHTML=purchases.map(function(p){
+          return '<div class="deltarow"><span>'+monthEsc(p.merchant)+'</span>'+      
+            '<span class="r" style="color:var(--muted);font-weight:600">'+monthEsc(p.category)+'</span>'+ 
+            '<span class="r c-avg">'+p.count+'</span><span class="r num">'+money(p.total)+'</span></div>';
+        }).join('')||'<div class="deltarow"><span>No unusual merchant-level charges.</span><span></span><span></span><span></span></div>';
+      }
+      var ag=purchases.filter(function(p){return p.merchant==='Amazon purchases';})[0];
+      var ai=m.amazon_items||[], ad=byId('mrAmazonDetail');
+      if(ad&&ag&&ai.length){
+        ad.style.display='';
+        setText('mrAmazonHeadline','Amazon was a stack of purchases, not one '+money(ag.total)+' mystery item.');
+        setText('mrAmazonText','The card posted '+money(ag.total)+' across '+ag.count+' charges. Your itemized order history shows '+
+          money(m.amazon_item_subtotal)+' before tax and posting timing. The biggest items were '+
+          ai.slice(0,6).map(function(x){
+            var name=x.description.length>58?x.description.slice(0,55)+'…':x.description;
+            return name+' ('+money(x.amount)+')';
+          }).join('; ')+'.');
+      }
+      var pp=m.post_period_manual||[], ppEl=byId('mrPostPeriod');
+      if(ppEl&&pp.length){
+        ppEl.style.display='';
+        setText('mrPostPeriodText',pp.map(function(x){return money(x.amount)+' '+x.description+' dated '+x.date;}).join('; ')+
+        '. It is tracked as pending activity, but not mixed into '+m.month+' or completed-month averages because it falls after the statement window.');
+      }
+    }
+    draw(); onBasis(draw);
+  })();
+  // category rows (with class chip, budget line, and click-to-expand merchant drill-down)
+  (function(){var h=document.getElementById('catrows');if(!h)return;
+    var clsmap={fixed:'b',var:'g',onetime:'a',care:'v'};
+    var taglabel={fixed:'fixed',var:'variable',onetime:'one-time',care:'care'};
+    var maxv=(D.categories||[]).reduce(function(m,c){return Math.max(m,c.avg_mo);},1);
+    h.setAttribute('data-max', maxv);
+    (D.categories||[]).forEach(function(c){
+      var ms=c.merchants||[];
+      var hasDrill=ms.length>0;
+      var clsChip=c.class?(' <span class="tag '+c.class+'">'+c.class+'</span>'):'';
+      var budgetLine='';
+      if(c.budget!=null){
+        var over=c.variance>0, pctFill=Math.min(100,c.avg_mo/c.budget*100);
+        budgetLine='<div class="budgetline"><span>vs target '+money(c.budget)+'</span>'+
+          '<span class="bt"><span class="fill" style="width:'+pctFill+'%;background:'+(over?'var(--coral-mark)':'var(--green-mark)')+'"></span></span>'+
+          '<span class="'+(over?'over':'under')+'">'+(over?'+':'−')+money(Math.abs(c.variance))+'</span></div>';
+      }
+      // 12-month sparkline: colored by tag, brightest bar = peak month
+      var sparkHtml='';
+      var mo=c.monthly||[];
+      if(mo.length){
+        var barColor={fixed:'var(--blue)',var:'var(--green)',onetime:'var(--amber)',care:'var(--violet)'}[c.tag]||'var(--green)';
+        var peak=mo.reduce(function(m,p){return Math.max(m,p.v);},0);
+        if(peak>0){
+          var peakM=mo.reduce(function(best,p){return p.v>best.v?p:best;},mo[0]);
+          sparkHtml='<div class="spark">'+mo.map(function(p){
+            var hpct=Math.max(4,Math.round(p.v/peak*100));
+            return '<i style="height:'+hpct+'%;background:'+barColor+(p.v>=peak?';opacity:1':'')+'" title="'+p.m+': '+money(p.v)+'"></i>';
+          }).join('')+'</div>'+
+          '<div class="sparkcap"><span>'+mo[0].m+'</span><span>peak '+money(peakM.v)+' in '+peakM.m+'</span><span>'+mo[mo.length-1].m+'</span></div>';
+        }
+      }
+      var drill=(hasDrill||sparkHtml)?('<div class="drill">'+sparkHtml+ms.map(function(m){
+        return '<div class="m"><span class="mn">'+m.name+' <span class="mc">×'+m.count+'</span></span><span class="num">'+money2(m.avg_mo)+'<span class="mc"> /mo</span></span></div>';
+      }).join('')+'</div>'):'';
+      var expandable=hasDrill||!!sparkHtml;
+      var row=document.createElement('div');
+      row.className='row'+(expandable?' exp':'');
+      row.innerHTML='<div class="top"><span class="lab">'+c.name+' <span class="tag '+c.tag+'">'+taglabel[c.tag]+'</span>'+clsChip+'</span>'+
+        '<span class="val num">'+money(c.avg_mo)+'</span></div>'+
+        '<div class="track"><div class="bar '+clsmap[c.tag]+'" data-val="'+c.avg_mo+'"></div></div>'+budgetLine+drill;
+      if(expandable){row.addEventListener('click',function(){row.classList.toggle('open');});}
+      h.appendChild(row);
+    });
+  })();
+  // ---------- budget tab: 50/30/20 ----------
+  (function(){
+    var b=D.budget_5030; if(!b) return;
+    var stack=byId('stack5030');
+    if(stack){
+      var segs=[['needs','Needs',b.needs_pct],['wants','Wants',b.wants_pct],['sav','Savings',b.savings_pct]];
+      stack.innerHTML=segs.map(function(s){
+        var w=Math.max(0,s[2]);
+        return '<div class="seg '+s[0]+'" style="flex:'+w+' 1 0" title="'+s[1]+' '+Math.round(s[2])+'%">'+(w>=8?Math.round(s[2])+'%':'')+'</div>';
+      }).join('');
+    }
+    var cmp=byId('cmp5030');
+    if(cmp){
+      var rows=[
+        ['Needs', b.needs_mo, b.needs_pct, b.target.needs, 'var(--green)'],
+        ['Wants', b.wants_mo, b.wants_pct, b.target.wants, 'var(--amber)'],
+        ['Savings', b.savings_mo, b.savings_pct, b.target.savings, 'var(--blue)']
+      ];
+      cmp.innerHTML=rows.map(function(r){
+        return '<div class="box"><div class="lbl">'+r[0]+'</div><div class="big2 num" style="color:'+r[4]+'">'+Math.round(r[2])+'%</div>'+
+          '<div class="tgt">'+money(r[1])+'/mo · target '+r[3]+'%</div></div>';
+      }).join('');
+    }
+    var ins=byId('ins5030');
+    if(ins){
+      var savingsOK=b.savings_pct>=b.target.savings;
+      ins.className='insight '+(savingsOK?'good':'warn');
+      ins.innerHTML='<div class="ic">'+(savingsOK?'✅':'🎯')+'</div><p><span class="h">You save '+Math.round(b.savings_pct)+
+        '% of take-home'+(savingsOK?' — past the 20% mark.':' vs a 20% target.')+'</span>'+
+        'And that\'s <i>before</i> the '+money(b.auto_retirement_mo)+'/mo that leaves pre-tax for your 403(b) + pension — count that and you clear 30%. '+
+        'Needs run '+Math.round(b.needs_pct)+'% (rent is most of it); wants '+Math.round(b.wants_pct)+'%. This is a healthy split.</p>';
+    }
+  })();
+  // ---------- budget tab: target vs actual rows ----------
+  (function(){
+    var h=byId('budgetrows'); if(!h) return;
+    var withBudget=(D.categories||[]).filter(function(c){return c.budget!=null;});
+    if(!withBudget.length){h.innerHTML='<div class="row"><div class="top"><span class="lab">No budgets set — add them in config.yaml → budgets</span></div></div>';return;}
+    var maxv=withBudget.reduce(function(m,c){return Math.max(m,c.avg_mo,c.budget);},1);
+    h.setAttribute('data-max', maxv);
+    h.innerHTML=withBudget.sort(function(a,b){return b.avg_mo-a.avg_mo;}).map(function(c){
+      var over=c.variance>0;
+      return '<div class="row"><div class="top"><span class="lab">'+c.name+'</span>'+
+        '<span class="val num">'+money(c.avg_mo)+' <span class="mut">of '+money(c.budget)+'</span></span></div>'+
+        '<div class="track"><div class="bar '+(over?'c':'g')+'" data-val="'+c.avg_mo+'"></div></div>'+
+        '<div class="budgetline"><span class="'+(over?'over':'under')+'">'+(over?'+':'−')+money(Math.abs(c.variance))+'/mo '+(over?'over':'under')+'</span></div></div>';
+    }).join('');
+  })();
+  // ---------- budget tab: sinking funds ----------
+  (function(){
+    var h=byId('sinkingTable'); if(!h) return;
+    var sf=D.sinking_funds||[];
+    if(!sf.length){h.innerHTML='<div class="rt"><div class="n">Nothing lumpy enough to flag</div></div>';return;}
+    var total=sf.reduce(function(a,s){return a+s.set_aside_mo;},0);
+    h.innerHTML=sf.map(function(s){
+      return '<div class="rt"><div class="n">'+s.name+'</div><div class="amt num">'+money2(s.set_aside_mo)+'<span class="mut">/mo</span></div>'+
+        '<div class="d">peaked at '+money(s.peak_month)+' in one month · hit '+s.months_hit+' of '+s.months_total+' months</div></div>';
+    }).join('')+'<div class="rt sum"><div class="n">Total to reserve</div><div class="amt num">~'+money(total)+'<span class="mut">/mo</span></div><div class="d">Park this in your Cash Plus HYSA so lumpy months are pre-funded.</div></div>';
+  })();
+  // ---------- red flags + where-it-goes snapshot ----------
+  (function(){
+    var flags=D.red_flags||[], sm=D.red_flags_summary||{high:0,medium:0,low:0,total:0};
+    // scorebar
+    var sb=byId('flagScorebar');
+    if(sb){
+      var pills=[['high','High',sm.high],['med','Medium',sm.medium],['low','Low',sm.low]];
+      sb.innerHTML=pills.map(function(p){
+        return '<div class="scorepill sev-'+p[0]+'"><span class="dot2"></span><span class="n2 num">'+(p[2]||0)+'</span><span class="l2">'+p[1]+'</span></div>';
+      }).join('');
+    }
+    // health line
+    setText('flagsHealthLine', sm.high? ('Currently '+sm.high+' high-priority item'+(sm.high>1?'s':'')+' to address.') :
+      'No high-priority red flags — the rest is fine-tuning.');
+    // where-it-goes proportional bar
+    var cats=(D.categories||[]).filter(function(c){return c.avg_mo>0;}).slice().sort(function(a,b){return b.avg_mo-a.avg_mo;});
+    var palette=['#2f66e0','#17734a','#8a6300','#b52d2d','#6a4bb8','#a97b00','#1f52c9','#9c1c1c','#553a9e','#5a6270'];
+    var TOP=8, top=cats.slice(0,TOP), rest=cats.slice(TOP);
+    var restSum=rest.reduce(function(a,c){return a+c.avg_mo;},0);
+    var segs=top.map(function(c,i){return {name:c.name,val:c.avg_mo,col:palette[i%palette.length]};});
+    if(restSum>0) segs.push({name:'Everything else',val:restSum,col:'#616975'});
+    var total=segs.reduce(function(a,s){return a+s.val;},0);
+    setText('flowTotal', money(total)+'/mo');
+    var fb=byId('flowbar');
+    if(fb){ fb.innerHTML=segs.map(function(s){
+      return '<div class="fseg" style="flex:'+s.val+' 1 0;background:'+s.col+'" title="'+s.name+': '+money(s.val)+'/mo"></div>';
+    }).join(''); }
+    var fl=byId('flowleg');
+    if(fl){ fl.innerHTML=segs.map(function(s){
+      return '<span><i class="sw" style="background:'+s.col+'"></i>'+s.name+' · '+money(s.val)+' ('+Math.round(s.val/total*100)+'%)</span>';
+    }).join(''); }
+    // findings
+    var host=byId('flagList');
+    if(host){
+      if(!flags.length){ host.innerHTML='<div class="flagcard sev-low"><div class="badge">clear</div><div><div class="ft">Nothing flagged</div><p class="fd">Your statements passed every check.</p></div></div>'; }
+      else{
+        var sevClass={high:'sev-high',medium:'sev-med',low:'sev-low'};
+        var sevLabel={high:'High',medium:'Medium',low:'Low'};
+        host.innerHTML=flags.map(function(f){
+          return '<div class="flagcard '+(sevClass[f.severity]||'sev-low')+'">'+
+            '<span class="badge">'+(sevLabel[f.severity]||f.severity)+'</span>'+
+            '<div><div class="fcat">'+f.category+'</div><div class="ft">'+f.title+'</div>'+
+            '<p class="fd">'+f.detail+'</p></div>'+
+            (f.metric?('<span class="fm num">'+f.metric+'</span>'):'')+'</div>';
+        }).join('');
+      }
+    }
+  })();
+  // ---------- amazon detail: searchable / filterable / sortable table ----------
+  (function(){
+    var host=byId('amzRows'); if(!host) return;
+    var items=((D.amazon||{}).items)||[];
+    setText('amzDetailCount', items.length);
+    var search=byId('amzSearch'), catSel=byId('amzCat'), shown=byId('amzShown');
+    // category dropdown
+    var cats={};
+    items.forEach(function(it){cats[it.category]=(cats[it.category]||0)+1;});
+    var catKeys=Object.keys(cats).sort();
+    catSel.innerHTML='<option value="">All categories ('+items.length+')</option>'+
+      catKeys.map(function(k){return '<option value="'+k+'">'+k.replace(/_/g,' ')+' ('+cats[k]+')</option>';}).join('');
+    var sortKey='line_total', sortDir=-1;
+    function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    function render(){
+      var q=(search.value||'').toLowerCase().trim(), cf=catSel.value;
+      var rows=items.filter(function(it){
+        if(cf && it.category!==cf) return false;
+        if(q && it.description.toLowerCase().indexOf(q)<0 && it.category.toLowerCase().indexOf(q)<0) return false;
+        return true;
+      });
+      rows.sort(function(a,b){
+        var x=a[sortKey], y=b[sortKey];
+        if(typeof x==='string'){x=x.toLowerCase();y=y.toLowerCase();}
+        return x<y?-sortDir:(x>y?sortDir:0);
+      });
+      var sum=rows.reduce(function(a,r){return a+r.line_total;},0);
+      shown.textContent=rows.length+' items · '+money(sum);
+      host.innerHTML=rows.map(function(it){
+        var d=esc(it.description);
+        var desc=it.url?('<a href="'+esc(it.url)+'" target="_blank" rel="noopener">'+d+'</a>'):d;
+        var sns=it.sns?'<span class="snschip">S&amp;S</span>':'';
+        return '<div class="rw"><span class="d2 c-date">'+it.date+'</span>'+
+          '<span class="desc">'+desc+sns+'</span>'+
+          '<span class="cat c-cat"><span class="tag var">'+it.category.replace(/_/g,' ')+'</span></span>'+
+          '<span class="r c-qty num">'+it.qty+'</span>'+
+          '<span class="r num">'+money2(it.line_total)+'</span></div>';
+      }).join('')||'<div class="rw"><span class="desc">No items match.</span></div>';
+    }
+    search.addEventListener('input', render);
+    catSel.addEventListener('change', render);
+    [].slice.call(document.querySelectorAll('#amazon .amztbl .hd span[data-sort]')).forEach(function(th){
+      th.addEventListener('click',function(){
+        var k=th.getAttribute('data-sort');
+        if(sortKey===k){sortDir=-sortDir;}else{sortKey=k;sortDir=(k==='description'||k==='category')?1:-1;}
+        document.querySelectorAll('#amazon .amztbl .hd span').forEach(function(s){s.classList.remove('s');s.innerHTML=s.innerHTML.replace(/ [▾▴]$/,'');});
+        th.classList.add('s'); th.innerHTML+=(sortDir<0?' ▾':' ▴');
+        render();
+      });
+    });
+    render();
+  })();
+  // ---------- merchants: who gets the money, by storefront ----------
+  (function(){
+    var M=D.merchants; var pane=byId('merchants'); if(!pane) return;
+    if(!M){ pane.innerHTML='<h2 class="sec">Who actually gets your money</h2><p class="lede">No merchant data in this build.</p>'; return; }
+    function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    var gg=M.grab_and_go||{merchants:[],by_weekday:[],monthly:[]};
+
+    // --- headline stats ---
+    setText('ggWindow', M.window_months+' mo');
+    setText('ggTotal', money(gg.total));
+    setText('ggMo', money(gg.avg_mo));
+    setText('ggYear', money(gg.annualized));
+    setText('ggCount', (gg.count||0).toLocaleString());
+    setText('ggTicket', money2(gg.avg_ticket));
+    byId('ggDays') && (byId('ggDays').innerHTML=(gg.days_with_a_stop||0)+'<small> of '+(gg.window_days||0)+' · '+(gg.pct_days||0)+'%</small>');
+
+    var top=(gg.merchants||[])[0];
+    if(top){
+      setText('ggTopName', top.name); setText('ggTopTotal', money(top.total));
+      setText('ggTopCount', top.count); setText('ggTopShare', (gg.top_share||0)+'%');
+      setText('ggTopTicket', money2(top.avg_ticket)); setText('ggTopPerMo', top.visits_mo);
+    }
+
+    // --- leaderboard: a bar per merchant, expandable to its monthly bars ---
+    function board(host, list, colorClass){
+      if(!host) return;
+      var max=list.reduce(function(m,x){return Math.max(m,x.total);},1);
+      host.setAttribute('data-max', max);
+      host.innerHTML='';
+      list.forEach(function(x,i){
+        var mo=x.monthly||[];
+        var spark='';
+        if(mo.length){
+          var peak=mo.reduce(function(m,p){return Math.max(m,p.v);},0);
+          if(peak>0){
+            spark='<div class="spark">'+mo.map(function(p){
+              return '<i style="height:'+Math.max(4,Math.round(p.v/peak*100))+'%;background:var(--amber)'+(p.v>=peak?';opacity:1':'')+'" title="'+p.m+': '+money(p.v)+'"></i>';
+            }).join('')+'</div><div class="sparkcap"><span>'+mo[0].m+'</span><span>last 12 months</span><span>'+mo[mo.length-1].m+'</span></div>';
+          }
+        }
+        var drill='<div class="drill">'+spark+
+          '<div class="m"><span class="mn">First seen</span><span class="num">'+(x.first||'—')+'</span></div>'+
+          '<div class="m"><span class="mn">Most recent</span><span class="num">'+(x.last||'—')+'</span></div>'+
+          '<div class="m"><span class="mn">Months with a visit</span><span class="num">'+x.months_active+' of '+M.window_months+'</span></div>'+
+          '<div class="m"><span class="mn">Share of all merchant spend</span><span class="num">'+x.share+'%</span></div></div>';
+        var row=document.createElement('div');
+        row.className='lbrow exp';
+        row.innerHTML='<div class="top"><span class="rk">'+(i+1)+'</span><span class="nm">'+esc(x.name)+'</span>'+
+            '<span class="amt num">'+money(x.total)+'</span></div>'+
+          '<div class="track"><div class="bar '+colorClass+'" data-val="'+x.total+'"></div></div>'+
+          '<div class="sub2"><span><b>'+x.count+'</b> visit'+(x.count===1?'':'s')+'</span>'+
+            '<span><b>'+money2(x.avg_ticket)+'</b> avg</span>'+
+            '<span><b>'+(x.visits_mo<0.1?'<0.1':x.visits_mo.toFixed(1))+'</b> visits/mo</span>'+
+            '<span><b>'+money2(x.avg_mo)+'</b>/mo</span>'+
+            '<span class="tag var">'+esc(x.cat_name)+'</span></div>'+drill;
+        row.addEventListener('click',function(){row.classList.toggle('open');});
+        host.appendChild(row);
+      });
+    }
+    board(byId('ggBoard'), (gg.merchants||[]).slice(0,15), 'a');
+
+    // ---------- Corner Stores ----------
+    // Same grab-and-go dataset as the Food tab, but every store instead of the top 15, with a
+    // per-store run-rate, direction, and a concentration strip -- the point is to make the short
+    // list of shops that own the habit impossible to miss.
+    (function(){
+      var all=(gg.merchants||[]).slice();
+      if(!all.length || !byId('csBoard')) return;
+      setText('csTotal', money(gg.total));
+      setText('csWindow', 'over '+(M.window_months||0)+' months');
+      setText('csMo', money(gg.avg_mo));
+      setText('csShare', (gg.share_of_spend||0)+'% of everything you spend');
+      setText('csYear', money(gg.annualized));
+      setText('csVisits', (gg.count||0).toLocaleString());
+      setText('csTicket', money2(gg.avg_ticket)+' average ticket');
+      var dEl=byId('csDays');
+      if(dEl) dEl.innerHTML=(gg.days_with_a_stop||0)+'<small> of '+(gg.window_days||0)+' · '+(gg.pct_days||0)+'%</small>';
+      setText('csShops', gg.distinct_merchants||all.length);
+
+      var half=0, n50=0;
+      for(var i=0;i<all.length;i++){ half+=all[i].total; n50++; if(half>=gg.total*0.5) break; }
+      var top=all[0];
+      setText('csHead', n50+' shop'+(n50===1?'':'s')+' account for half of it.');
+      setText('csText', 'You have paid '+(gg.distinct_merchants||all.length)+' different shops '+
+        (gg.count||0).toLocaleString()+' times, but the money is not spread evenly: '+n50+' of them take half of every dollar. '+
+        top.name+' alone is '+money(top.total)+' across '+top.count+' visits — '+top.pct_of_habit+'% of the habit, '+
+        'running at '+money(top.run_rate_yr)+'/yr. At its own '+money2(top.avg_ticket)+' ticket, one fewer stop there per week is '+
+        money(top.one_less_per_week_yr)+' a year back in your pocket.');
+
+      var pal=['#ac8636','#a56f42','#a05a4e','#944f5d','#7c4c69','#614d71','#494d74','#364e6e','#304e62','#2e4e57'];
+      var cum=byId('csCum'), key=byId('csCumKey');
+      if(cum){
+        cum.innerHTML=all.map(function(x,i){
+          var w=gg.total?(x.total/gg.total*100):0;
+          return '<i style="width:'+w+'%;background:'+(i<pal.length?pal[i]:'var(--line)')+'" title="'+
+                 esc(x.name)+': '+money(x.total)+' ('+x.pct_of_habit+'%)"></i>';
+        }).join('');
+      }
+      if(key){
+        var six=all.slice(0,6);
+        var rest=Math.max(0, Math.round((100-six.reduce(function(s,x){return s+x.pct_of_habit;},0))*10)/10);
+        key.innerHTML=six.map(function(x,i){
+          return '<span><i style="background:'+pal[i]+'"></i>'+esc(x.name)+' '+x.pct_of_habit+'%</span>';
+        }).join('')+'<span><i style="background:var(--line)"></i>everyone else '+rest+'%</span>';
+      }
+
+      function trendChip(x){
+        if(x.trend_pct===null||x.trend_pct===undefined) return '';
+        var v=x.trend_pct, cls=v>10?'up':(v<-10?'dn':'fl');
+        var arrow=v>10?'▲':(v<-10?'▼':'▬');
+        return '<span class="trend '+cls+'" title="last 3 months vs the 3 before">'+arrow+' '+
+               (v>0?'+':'')+Math.round(v)+'%</span>';
+      }
+      function render(list){
+        var host=byId('csBoard'); if(!host) return;
+        var max=list.reduce(function(m,x){return Math.max(m,x.total);},1);
+        host.innerHTML='';
+        list.forEach(function(x){
+          var mo=x.monthly||[], spark='';
+          if(mo.length){
+            var peak=mo.reduce(function(m,q){return Math.max(m,q.v);},0);
+            if(peak>0){
+              spark='<div class="spark">'+mo.map(function(q){
+                return '<i style="height:'+Math.max(4,Math.round(q.v/peak*100))+'%;background:var(--amber)"'+
+                       ' title="'+q.m+': '+money(q.v)+'"></i>';
+              }).join('')+'</div><div class="sparkcap"><span>'+mo[0].m+'</span><span>last 12 months</span><span>'+
+                mo[mo.length-1].m+'</span></div>';
+            }
+          }
+          var vs=(x.recent3_mo===null||x.recent3_mo===undefined)
+                 ? 'not enough history'
+                 : money2(x.recent3_mo)+'/mo vs '+money2(x.prior3_mo)+'/mo';
+          var drill='<div class="drill">'+spark+
+            '<div class="m"><span class="mn">Run-rate</span><span class="num">'+money(x.run_rate_yr)+' / yr</span></div>'+
+            '<div class="m"><span class="mn">One fewer stop a week</span><span class="num">'+money(x.one_less_per_week_yr)+' / yr saved</span></div>'+
+            '<div class="m"><span class="mn">Last 3 months vs the 3 before</span><span class="num">'+vs+'</span></div>'+
+            '<div class="m"><span class="mn">First seen</span><span class="num">'+(x.first||'—')+'</span></div>'+
+            '<div class="m"><span class="mn">Most recent</span><span class="num">'+(x.last||'—')+'</span></div>'+
+            '<div class="m"><span class="mn">Months with a visit</span><span class="num">'+x.months_active+' of '+M.window_months+'</span></div>'+
+            '<div class="m"><span class="mn">Share of the habit · running total</span><span class="num">'+
+              x.pct_of_habit+'% · '+x.cum_pct_of_habit+'%</span></div></div>';
+          var row=document.createElement('div');
+          row.className='lbrow exp';
+          row.innerHTML='<div class="top"><span class="rk">'+x._rank+'</span><span class="nm">'+esc(x.name)+'</span>'+
+              '<span class="amt num">'+money(x.total)+'</span></div>'+
+            '<div class="track"><div class="bar a" style="width:'+Math.max(2,Math.round(x.total/max*100))+'%"></div></div>'+
+            '<div class="sub2"><span><b>'+x.count+'</b> visit'+(x.count===1?'':'s')+'</span>'+
+              '<span><b>'+money2(x.avg_ticket)+'</b> avg</span>'+
+              '<span><b>'+money(x.run_rate_yr)+'</b>/yr</span>'+
+              '<span><b>'+x.pct_of_habit+'%</b> of the habit</span>'+
+              trendChip(x)+
+              '<span class="tag var">'+esc(x.cat_name)+'</span></div>'+drill;
+          row.addEventListener('click',function(){row.classList.toggle('open');});
+          host.appendChild(row);
+        });
+      }
+      all.forEach(function(x,i){ x._rank=i+1; });
+      var showAll=false, q='';
+      function apply(){
+        var list=all.filter(function(x){ return !q || x.name.toLowerCase().indexOf(q)>=0; });
+        var shown=(showAll||q)?list:list.slice(0,20);
+        render(shown);
+        setText('csCount', 'Showing '+shown.length+' of '+all.length+' shops'+
+          (q?' matching "'+q+'"':'')+' · '+money(shown.reduce(function(s,x){return s+x.total;},0))+' of '+money(gg.total));
+      }
+      var sEl=byId('csSearch');
+      if(sEl) sEl.addEventListener('input', function(){ q=this.value.trim().toLowerCase(); apply(); });
+      var bTop=byId('csTop'), bAll=byId('csAll');
+      if(bTop) bTop.addEventListener('click', function(){ showAll=false; bTop.classList.add('on'); bAll.classList.remove('on'); apply(); });
+      if(bAll) bAll.addEventListener('click', function(){ showAll=true; bAll.classList.add('on'); bTop.classList.remove('on'); apply(); });
+      apply();
+      columns(byId('csTickets'), gg.ticket_buckets||[], 'label', 'count', function(v){return v;});
+    })();
+
+    // --- day-of-week + month columns ---
+    function columns(host, items, labelKey, valKey, fmt){
+      if(!host) return;
+      var max=items.reduce(function(m,x){return Math.max(m,x[valKey]);},1);
+      host.innerHTML=items.map(function(x){
+        var isPeak=x[valKey]>=max;
+        return '<div class="d'+(isPeak?' peak':'')+'"><span class="vv">'+fmt(x[valKey])+'</span>'+
+          '<span class="bx" style="height:'+Math.max(3,Math.round(x[valKey]/max*100))+'%"></span>'+
+          '<span class="lb2">'+x[labelKey]+'</span></div>';
+      }).join('');
+    }
+    columns(byId('ggTickets'), gg.ticket_buckets||[], 'label', 'count', function(v){return v;});
+    columns(byId('ggMonths'), gg.monthly||[], 'm', 'v', function(v){return money(v);});
+    var small=(gg.ticket_buckets||[]).filter(function(b){return b.label==='Under $3'||b.label==='$3–5';})
+      .reduce(function(a,b){return a+b.pct;},0);
+    setText('ggSmallShare', Math.round(small)+'%');
+    setText('ggYear2', money(gg.annualized));
+
+
+    // --- the next 30 days: committed outflow against expected income ---
+    // The rest of this tab is a post-mortem. This is the only place that looks forward, and it
+    // only ever uses money that is already spoken for: statements that have closed, and bills that
+    // have charged on the same rhythm for months. Card-paid subscriptions are deliberately absent
+    // -- they land on a statement that closes later, so counting them here would bill the same
+    // dollar twice, once as a swipe and once inside the statement balance already listed.
+    (function(){
+      var f=D.forward_30;
+      if(!f||!f.ledger||!f.ledger.length){ var h=byId('f30Head'); if(h) h.style.display='none'; return; }
+      var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+      function dm(s){ var p=String(s).split('-'); return MONTHS[+p[1]-1]+' '+(+p[2]); }
+      setText('f30Lede','Every line below is already owed or already scheduled — '+dm(f.start)+
+        ' through '+dm(f.end)+'. Nothing discretionary is in here, so treat it as the floor the '+
+        'month starts from, not a forecast of what you will spend.');
+      setText('f30Open', money(f.opening));
+      setText('f30OpenSub', money(f.liquid_cash)+' cash less '+money(f.card_balances)+' owed on cards');
+      setText('f30Out', money(f.committed_out));
+      setText('f30OutSub', f.ledger.filter(function(x){return x.amount<0;}).length+' committed items');
+      setText('f30In', money(f.expected_in));
+      setText('f30InSub', f.n_paychecks+' paycheck'+(f.n_paychecks===1?'':'s')+' on your usual rhythm');
+      var lowRow=f.ledger.filter(function(x){return x.balance===f.low_point;})[0];
+      setText('f30Low', money(f.low_point));
+      setText('f30LowSub', lowRow?('on '+dm(lowRow.date)):'across the window');
+
+      var short=f.expected_in-f.committed_out;
+      setText('f30Headline', short<0
+        ? (dm(f.start).split(' ')[0]+'’s fixed obligations run '+money(Math.abs(short))+' past your paychecks.')
+        : ('Your paychecks cover the committed month with '+money(short)+' to spare.'));
+      setText('f30Text', 'Committed outflow is '+money(f.committed_out)+' against '+money(f.expected_in)+
+        ' of expected salary. '+(short<0
+          ? ('The gap comes out of cash, which is why the balance dips to '+money(f.low_point)+
+             (lowRow?(' on '+dm(lowRow.date)):'')+'. With '+money(f.opening)+
+             ' on hand that is comfortable — but note it happens before you buy a single thing, '+
+             'so every discretionary dollar this month is drawn from savings, not from income.')
+          : ('That leaves headroom before any discretionary spending, so the month starts from a surplus.'))+
+        ' The '+money(f.card_balances)+' already owed on cards is held back from the opening figure; '+
+        'the friend repayment is not counted until it lands.');
+
+      var host=byId('f30Rows');
+      if(host){
+        host.innerHTML=f.ledger.map(function(x){
+          var inflow=x.amount>0;
+          return '<div class="deltarow">'+
+            '<span style="color:var(--muted)">'+dm(x.date)+'</span>'+
+            '<span class="r" style="text-align:left;font-weight:700">'+esc(x.label)+
+              '<small style="display:block;font-weight:500;color:var(--faint)">'+esc(x.detail)+'</small></span>'+
+            '<span class="r c-avg num" style="color:'+(inflow?'var(--up)':'var(--down)')+';font-weight:700">'+
+              (inflow?'+':'−')+money(Math.abs(x.amount))+'</span>'+
+            '<span class="r num" style="color:var(--muted)">'+money(x.balance)+'</span></div>';
+        }).join('');
+      }
+    })();
+
+    // --- deli decode: the ticket ladder read back as a basket ---
+    (function(){
+      var dd=D.deli_decode; if(!dd){ var hd=byId('dlHead'); if(hd) hd.style.display='none'; return; }
+      setText('dlLede','Card statements record one number per visit and no line items. But '+dd.merchant+
+        ' prices on a $'+dd.price_grid.toFixed(2)+' grid and charges '+Math.round(dd.tax_rate*100)+
+        '% tax, so '+dd.on_grid_pct+'% of your '+dd.visits+' tickets land on exact multiples of $'+
+        (dd.price_grid*(1+dd.tax_rate)).toFixed(2)+'. That makes the ladder of amounts readable as a menu.');
+      setText('dlVisits', dd.visits);
+      byId('dlGrid') && (byId('dlGrid').innerHTML=dd.on_grid_pct+'<small>%</small>');
+      setText('dlDistinct', dd.distinct_tickets);
+      byId('dlExplained') && (byId('dlExplained').innerHTML=dd.explained_pct+'<small>% · '+money(dd.explained)+'</small>');
+      var host=byId('dlLadder');
+      if(host){
+        host.innerHTML=(dd.ladder||[]).map(function(r){
+          return '<div class="deltarow"><span class="num">$'+r.pre.toFixed(2)+'</span>'+
+            '<span class="r">'+r.count+'</span>'+
+            '<span class="r c-avg" style="color:var(--muted);font-weight:600">'+money(r.total)+'</span>'+
+            '<span class="r rd" style="font-weight:600;color:'+(r.reading?'var(--paper)':'var(--faint)')+'">'+
+              (r.reading||'unidentified')+'</span></div>';
+        }).join('');
+      }
+      var u=(dd.units||[]).map(function(x){return x.count+' '+x.name;}).join(' and ');
+      var top=(dd.top_unexplained||[])[0];
+      setText('dlHeadline','Your stated basket is real — but it is only '+dd.explained_pct+'% of the bill.');
+      setText('dlText','The $3.25 Red Bull and $1.75 Clif Bar combination shows up clearly: '+u+
+        ' over '+dd.months+' months, '+money(dd.explained)+' of the '+money(dd.total)+' total. '+
+        (top?('The bigger line is unidentified — a $'+top.pre.toFixed(2)+' item bought '+top.count+
+              ' times for '+money(top.total)+', more often than anything else you buy there. '+
+              'Add it to known_items in config.yaml and the decoder will account for it.'):''));
+    })();
+
+
+    // --- the signature ticket: is this month actually lighter? ---
+    // Two different things make a deli month cheap -- fewer trips, or a smaller basket per trip --
+    // and the totals alone cannot tell them apart. Visits, combos and average ticket side by side
+    // can, which is the whole point of counting the repeated basket rather than only the dollars.
+    (function(){
+      var dd=D.deli_decode; if(!dd || !dd.combo || !dd.latest || !dd.usual){
+        var h=byId('cbHead'); if(h) h.style.display='none'; return; }
+      var c=dd.combo, L=dd.latest, U=dd.usual;
+      setText('cbLabel', c.label+' · '+money2(c.charged));
+      setText('cbLede','Your repeated basket at '+dd.merchant+': '+c.items.join(' + ')+' — $'+
+        c.pre.toFixed(2)+' on the shelf, '+money2(c.charged)+' on the card after '+
+        Math.round(dd.tax_rate*100)+'% tax. It has been rung up '+c.count+' times, '+
+        c.share_visits_pct+'% of every visit you have made there.');
+
+      var dSpend=L.spend-U.spend, pct=U.spend?Math.round(dSpend/U.spend*100):0;
+      setText('cbSpend', money(L.spend));
+      setText('cbVisits', L.visits+' visits');
+      var dEl=byId('cbDelta');
+      if(dEl){ dEl.textContent=(dSpend>=0?'+':'−')+money(Math.abs(dSpend)).replace('$','$');
+               dEl.style.color = dSpend<0 ? 'var(--up)' : 'var(--down)'; }
+      setText('cbUsual', (pct>=0?'+':'')+pct+'% vs '+money(U.spend)+' usual ('+U.months+' mo)');
+      setText('cbCombos', L.combos);
+      setText('cbCombosUsual', 'usual is '+U.combos+' a month');
+      setText('cbAvg', money2(L.avg_ticket));
+      setText('cbAvgUsual', 'usual is '+money2(U.avg_ticket)+' a visit');
+
+      var cheaper = dSpend < 0;
+      var fewerVisits = L.visits < U.visits;
+      var smallerBasket = L.avg_ticket < U.avg_ticket;
+      var why = [];
+      if(fewerVisits) why.push('you went '+(Math.round((U.visits-L.visits)*10)/10)+' fewer times');
+      else if(L.visits>U.visits) why.push('you went '+(Math.round((L.visits-U.visits)*10)/10)+' more times');
+      if(smallerBasket) why.push('and each stop was '+money2(U.avg_ticket-L.avg_ticket)+' smaller');
+      else if(L.avg_ticket>U.avg_ticket) why.push('but each stop was '+money2(L.avg_ticket-U.avg_ticket)+' bigger');
+      setText('cbHeadline', cheaper
+        ? ('Yes — '+L.m+' was '+money(Math.abs(dSpend))+' lighter than usual.')
+        : (L.m+' ran '+money(Math.abs(dSpend))+' above your usual month.'));
+      setText('cbText', 'You spent '+money(L.spend)+' over '+L.visits+' visits against a '+U.months+
+        '-month norm of '+money(U.spend)+' over '+U.visits+'. In short: '+why.join(', ')+'. '+
+        (L.combos>U.combos
+          ? ('The basket also narrowed toward the '+c.label+' — '+L.combos+' of them this month against '+
+             U.combos+' in a normal month. That combo is '+money2(c.charged)+', below your '+
+             money2(U.avg_ticket)+' average ticket, so leaning on it pulls the per-visit number down.')
+          : ('You bought the '+c.label+' '+L.combos+' times against '+U.combos+' in a normal month.')));
+
+      var host=byId('cbRows');
+      if(host){
+        var maxS=(dd.monthly||[]).reduce(function(m,x){return Math.max(m,x.spend);},1);
+        host.innerHTML=(dd.monthly||[]).slice().reverse().map(function(x,i){
+          return '<div class="deltarow"'+(i===0?' style="font-weight:700"':'')+'>'+
+            '<span>'+x.m+'</span><span class="r">'+x.visits+'</span>'+
+            '<span class="r c-avg" style="color:'+(x.combos?'var(--paper)':'var(--faint)')+'">'+x.combos+'</span>'+
+            '<span class="r num">'+money(x.spend)+'</span></div>';
+        }).join('');
+      }
+    })();
+
+    // --- energy drinks: same can, three prices ---
+    (function(){
+      var e=D.energy; var host=byId('edRows'); if(!e||!host) return;
+      var rows=[];
+      if(e.deli_per_can) rows.push({lab:'At the corner store (Red Bull, $3.25 + tax)', v:e.deli_per_can, cls:'c'});
+      (e.packs||[]).filter(function(p){return p.per_can;}).forEach(function(p){
+        rows.push({lab:p.product.split(',')[0].slice(0,38)+' · '+p.cans+'-pack · '+p.date, v:p.per_can, cls:'g'});
+      });
+      var max=rows.reduce(function(m,r){return Math.max(m,r.v);},1);
+      host.setAttribute('data-max',max);
+      host.innerHTML=rows.map(function(r){
+        return '<div class="row"><div class="top"><span class="lab">'+r.lab+'</span>'+
+          '<span class="val num">'+money2(r.v)+'<span class="mut"> /can</span></span></div>'+
+          '<div class="track"><div class="bar '+r.cls+'" data-val="'+r.v+'"></div></div></div>';
+      }).join('');
+      var save=e.deli_per_can&&e.best_per_can?(e.deli_per_can-e.best_per_can):0;
+      setText('edHeadline','You already solved this — then kept paying the markup anyway.');
+      setText('edText','Your own Amazon orders get a can down to '+money2(e.best_per_can)+
+        ' (and your standing Red Bull 24-pack is $1.75). At the corner store the same drink is '+money2(e.deli_per_can)+
+        ' — a '+money2(save)+' premium per can. You have bought about '+e.deli_cans+
+        ' cans at the counter, roughly '+money(e.deli_cans*save)+' of pure convenience cost. '+
+        'Note the spread inside Amazon too: '+money2(e.best_per_can)+' to '+money2(e.worst_per_can)+
+        '/can across '+e.amazon_orders+' orders totalling '+money(e.amazon_total)+
+        ' — bulk buying only helps when you check the per-can price.');
+    })();
+
+    // --- full searchable / sortable merchant table ---
+    var all=(M.top||[]).map(function(x){return x;});
+    setText('mTotalCount', (M.distinct||all.length).toLocaleString());
+    var search=byId('mSearch'), catSel=byId('mCat'), host=byId('mRows'), shown=byId('mCount');
+    var cats={};
+    all.forEach(function(x){cats[x.cat_name]=(cats[x.cat_name]||0)+1;});
+    var catKeys=Object.keys(cats).sort();
+    catSel.innerHTML='<option value="">All categories ('+all.length+')</option>'+
+      catKeys.map(function(k){return '<option value="'+esc(k)+'">'+esc(k)+' ('+cats[k]+')</option>';}).join('');
+    var sortKey='total', sortDir=-1;
+    function renderTable(){
+      var q=(search.value||'').toLowerCase().trim(), cf=catSel.value;
+      var rows=all.filter(function(x){
+        if(cf && x.cat_name!==cf) return false;
+        if(q && x.name.toLowerCase().indexOf(q)<0 && x.cat_name.toLowerCase().indexOf(q)<0) return false;
+        return true;
+      });
+      rows.sort(function(a,b){
+        var x=a[sortKey], y=b[sortKey];
+        if(typeof x==='string'){x=x.toLowerCase();y=y.toLowerCase();}
+        return x<y?-sortDir:(x>y?sortDir:0);
+      });
+      var sum=rows.reduce(function(a,r){return a+r.total;},0);
+      shown.textContent=rows.length+' merchants · '+money(sum);
+      host.innerHTML=rows.map(function(x){
+        return '<div class="rw"><span class="desc">'+esc(x.name)+'</span>'+
+          '<span class="cat c-cat"><span class="tag var">'+esc(x.cat_name)+'</span></span>'+
+          '<span class="r c-count num">'+x.count+'</span>'+
+          '<span class="r c-avg num">'+money2(x.avg_mo)+'</span>'+
+          '<span class="r num">'+money(x.total)+'</span></div>';
+      }).join('')||'<div class="rw"><span class="desc">No merchants match.</span></div>';
+    }
+    search.addEventListener('input', renderTable);
+    catSel.addEventListener('change', renderTable);
+    [].slice.call(document.querySelectorAll('#merchants .amztbl .hd span[data-sort]')).forEach(function(th){
+      th.addEventListener('click',function(){
+        var k=th.getAttribute('data-sort');
+        if(sortKey===k){sortDir=-sortDir;}else{sortKey=k;sortDir=(k==='name'||k==='cat_name')?1:-1;}
+        document.querySelectorAll('#merchants .amztbl .hd span').forEach(function(s){s.classList.remove('s');s.innerHTML=s.innerHTML.replace(/ [▾▴]$/,'');});
+        th.classList.add('s'); th.innerHTML+=(sortDir<0?' ▾':' ▴');
+        renderTable();
+      });
+    });
+    renderTable();
+  })();
+  // ---------- cat care (chewy) ----------
+  (function(){
+    var c=D.chewy;
+    var pane=byId('pets'); if(!pane) return;
+    if(!c){ pane.innerHTML='<h2 class="sec">Cat care 🐾</h2><p class="lede">No Chewy data yet. Drop a Chewy order-history export into <span class="num">data/chewy/</span> and rerun <span class="num">update.py</span>.</p>'; return; }
+    function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    var amz=c.amazon_cat||{total:0,n_items:0,items:[]};
+    setText('petCombined', money(c.combined_total));
+    setText('petRunRate', money(c.run_rate_mo));
+    byId('petRunRate') && (byId('petRunRate').innerHTML=money(c.run_rate_mo)+'<small>/mo</small>');
+    setText('petWindow', c.window?c.window.start:'—');
+    setText('petSplitNote', money(c.card_paid)+' recurring supplies (Chewy) + '+money(amz.total)+' gear & extras (Amazon)');
+    setText('petOrders', c.n_orders);
+    setText('petAmzTotal', money(amz.total));
+    setText('petAmzItems', amz.n_items);
+    setText('petPromo', money(c.promo_savings));
+    setText('petAutoshipYr', money(c.autoship_ongoing_yr));
+    setText('actChewyEss', money(c.essential_run_rate_mo));
+    setText('actChewySave', money(c.autoship_ongoing_yr));
+    setText('petItemCount', (c.all_items||[]).length);
+
+    // sense-check insight (data-driven, matches the dashboard's non-judgmental tone)
+    var sc=byId('petSenseCheck');
+    if(sc){
+      sc.innerHTML='<div class="ic">🐈</div><p><span class="h">This is money well spent — and mostly the basics.</span>'+
+        'Across both stores you\'ve put '+money(c.combined_total)+' into the cat. On Chewy, '+Math.round(c.essential_pct)+
+        '% of what you buy is food &amp; litter — the non-negotiable necessities — and you already trimmed '+money(c.promo_savings)+
+        ' with an eGift promo. The Amazon spend is one-time gear, not a recurring drain. Nothing here reads as impulse or waste; it\'s care. '+
+        (c.autoship_started
+          ? 'The recurring lever — <b>Autoship on the food &amp; litter</b> — is already pulled.</p>'
+          : 'The one recurring lever is <b>Autoship on the food &amp; litter</b> (below).</p>');
+    }
+    // once enrolled, the Autoship callouts become confirmation rather than a to-do
+    if(c.autoship_started){
+      var ao=byId('petAutoship');
+      if(ao) ao.outerHTML='<div class="insight win" id="petAutoship"><div class="ic">✅</div><p>'+
+        '<span class="h">Autoship is on — this one\'s done.</span>You enrolled on '+c.autoship_started+
+        ', so the food &amp; litter you already rebuy now comes in at <b>5% off every order</b> with locked-in free '+
+        'shipping (the first order took 35% off). Worth ~<b>'+money(c.autoship_ongoing_yr)+'/yr</b> for zero ongoing effort. '+
+        'Skip or reschedule a delivery any time from the review email Chewy sends a few days before it ships.</p></div>';
+      var acts=[].slice.call(document.querySelectorAll('#action .act'));
+      acts.forEach(function(a){
+        var h=a.querySelector('.h');
+        if(h && /Chewy Autoship/i.test(h.textContent)){
+          a.classList.add('house');
+          h.innerHTML='✅ Done — cats\' food &amp; litter are on Chewy Autoship';
+          a.querySelector('.d').innerHTML='Enrolled '+c.autoship_started+'. The recurring food and litter now bill at 5% off '+
+            'with free shipping, banking ~'+money(c.autoship_ongoing_yr)+'/yr on purchases you were making anyway. '+
+            'Nothing left to do here except skip a delivery if the pantry is full.';
+          a.querySelector('.save .u').textContent='/year · banked';
+        }
+      });
+    }
+    // amazon gear note: name the biggest one-time items
+    var gearNote=byId('petAmzGearNote');
+    if(gearNote){
+      var gear=(amz.items||[]).filter(function(it){return it.cat==='gear';}).sort(function(a,b){return b.price-a.price;}).slice(0,3);
+      var names=gear.map(function(g){return g.product.split(',')[0].replace(/^[A-Za-z0-9]+\s/,'').slice(0,28);});
+      gearNote.textContent='You spent '+money(amz.total)+' on '+amz.n_items+' cat items at Amazon'+(gear.length?(', led by the '+gear.map(function(g){return money(g.price)}).join(', ')+' big-ticket gear'):'')+'. ';
+    }
+
+    // by-type bars (list price of captured items)
+    (function(){
+      var h=byId('petTypeRows'); if(!h) return;
+      var bt=c.by_type||[];
+      var clsmap={food:'g',litter:'b',treats:'a',toys:'v',health:'c',other:'g'};
+      var maxv=bt.reduce(function(m,t){return Math.max(m,t.list_total);},1);
+      h.setAttribute('data-max', maxv);
+      h.innerHTML=bt.map(function(t){
+        return rowBar(t.name+' <span class="tag var">'+t.items+' item'+(t.items!==1?'s':'')+'</span>', t.list_total, clsmap[t.key]||'g');
+      }).join('')||'<div class="row"><span class="lab">No items captured.</span></div>';
+    })();
+
+    // monthly bars (card-paid)
+    (function(){
+      var h=byId('petMonthRows'); if(!h) return;
+      var mm=c.monthly||[];
+      var maxv=mm.reduce(function(m,x){return Math.max(m,x.amount);},1);
+      h.setAttribute('data-max', maxv);
+      h.innerHTML=mm.map(function(x){return rowBar(x.month, x.amount, 'v');}).join('')||'<div class="row"><span class="lab">—</span></div>';
+    })();
+
+    // combined item table (Chewy + Amazon): search / filter by type & store / sort
+    (function(){
+      var host=byId('petRows'); if(!host) return;
+      var items=c.all_items||[];
+      var search=byId('petSearch'), catSel=byId('petCat'), srcSel=byId('petSource'), shown=byId('petShown');
+      var cats={};
+      items.forEach(function(it){cats[it.cat]=(cats[it.cat]||0)+1;});
+      catSel.innerHTML='<option value="">All types ('+items.length+')</option>'+
+        Object.keys(cats).sort().map(function(k){return '<option value="'+k+'">'+k+' ('+cats[k]+')</option>';}).join('');
+      var sortKey='date', sortDir=-1;
+      function render(){
+        var q=(search.value||'').toLowerCase().trim(), cf=catSel.value, sf=srcSel.value;
+        var rows=items.filter(function(it){
+          if(cf && it.cat!==cf) return false;
+          if(sf && it.source!==sf) return false;
+          var hay=(it.product+' '+it.cat+' '+it.source).toLowerCase();
+          if(q && hay.indexOf(q)<0) return false;
+          return true;
+        });
+        rows.sort(function(a,b){var x=a[sortKey],y=b[sortKey];
+          if(x==null)x=0; if(y==null)y=0;
+          if(typeof x==='string'){x=(x||'').toLowerCase();y=(y||'').toLowerCase();}
+          return x<y?-sortDir:(x>y?sortDir:0);});
+        var sum=rows.reduce(function(a,r){return a+(r.price||0);},0);
+        shown.textContent=rows.length+' items';
+        host.innerHTML=rows.map(function(it){
+          return '<div class="rw"><span class="d2 c-date">'+it.date+'</span>'+
+            '<span class="desc">'+esc(it.product)+'</span>'+
+            '<span class="c-src"><span class="srcchip '+it.source+'">'+it.source+'</span></span>'+
+            '<span class="c-cat"><span class="catchip '+it.cat+'">'+it.cat_name+'</span></span>'+
+            '<span class="r num">'+(it.price!=null?money2(it.price):'—')+'</span></div>';
+        }).join('')||'<div class="rw"><span class="desc">No items match.</span></div>';
+      }
+      search.addEventListener('input', render);
+      catSel.addEventListener('change', render);
+      srcSel.addEventListener('change', render);
+      [].slice.call(document.querySelectorAll('#pets .amztbl .hd span[data-sort]')).forEach(function(th){
+        th.addEventListener('click',function(){
+          var k=th.getAttribute('data-sort');
+          if(sortKey===k){sortDir=-sortDir;}else{sortKey=k;sortDir=(k==='product'||k==='cat'||k==='source')?1:-1;}
+          document.querySelectorAll('#pets .amztbl .hd span').forEach(function(s){s.classList.remove('s');s.innerHTML=s.innerHTML.replace(/ [▾▴]$/,'');});
+          th.classList.add('s'); th.innerHTML+=(sortDir<0?' ▾':' ▴');
+          render();
+        });
+      });
+      render();
+    })();
+  })();
+  // food rows (duo per month)
+  (function(){var h=document.getElementById('foodrows');if(!h)return;
+    var max=Math.max.apply(null,FOOD.map(function(f){return Math.max(f[1]||0,f[2]||0);}).concat([1]));
+    FOOD.forEach(function(f){
+      h.innerHTML+='<div class="row"><div class="top"><span class="lab">'+f[0]+'</span><span class="val num">'+money(f[1]+f[2])+' <span class="mut">total</span></span></div>'+
+      '<div class="pair"><div class="miniwrap"><span class="mtag">Groc</span><div class="mtrack"><div class="bar g" data-w="'+(f[1]/max*100)+'"></div></div><span class="mval num">'+money(f[1])+'</span></div>'+
+      '<div class="miniwrap"><span class="mtag">Out</span><div class="mtrack"><div class="bar c" data-w="'+(f[2]/max*100)+'"></div></div><span class="mval num">'+money(f[2])+'</span></div></div></div>';
+    });
+  })();
+  // svg trend
+  (function(){var h=document.getElementById('trendsvg');if(!h)return;
+    var W=900,H=300,padB=46,padT=24,padL=8,padR=8;
+    var max=Math.max.apply(null,TREND.map(function(d){return d[1]||0;}).concat([1])), n=TREND.length, gap=4;
+    var bw=(W-padL-padR)/n;
+    var eraColors=["#e7dff4","#eceaf1","#dde8f3"];
+    var peakRow=TREND.reduce(function(a,d){return (!a||d[1]>a[1])?d:a;},null)||["",0];
+    var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Monthly card spending, peaking at '+money(peakRow[1])+' in '+peakRow[0]+'.">';
+    // era bands
+    var eraStart={0:null,1:null,2:null},eraEnd={};
+    TREND.forEach(function(d,i){var e=d[2]; if(eraStart[e]===null)eraStart[e]=i; eraEnd[e]=i;});
+    [0,1,2].forEach(function(e){if(eraStart[e]===null)return; var x0=padL+eraStart[e]*bw, x1=padL+(eraEnd[e]+1)*bw;
+      s+='<rect x="'+x0+'" y="'+padT+'" width="'+(x1-x0)+'" height="'+(H-padT-padB)+'" fill="'+eraColors[e]+'" opacity="0.5"/>';});
+    // bars
+    TREND.forEach(function(d,i){
+      var x=padL+i*bw+gap/2, bwi=bw-gap;
+      var bh=(d[1]/max)*(H-padT-padB);
+      var y=H-padB-bh;
+      var peak=(d[1]>=max*0.97);
+      var col=peak?"#a97b00":(d[2]===2?"#2f66e0":"#616975");
+      s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bwi.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2" fill="'+col+'"><title>'+d[0]+': '+money(d[1])+'</title></rect>';
+      if(peak||d[1]>=900){s+='<text x="'+(x+bwi/2).toFixed(1)+'" y="'+(y-6).toFixed(1)+'" fill="#1f2630" font-size="13" font-weight="800" text-anchor="middle" font-family="ui-monospace,monospace">'+money(d[1])+'</text>';}
+    });
+    // x labels (every 3rd)
+    TREND.forEach(function(d,i){ if(i%3===0||i===n-1){
+      s+='<text x="'+(padL+i*bw+bw/2).toFixed(1)+'" y="'+(H-padB+20)+'" fill="#5a6270" font-size="12" text-anchor="middle">'+d[0]+'</text>';}});
+    s+='</svg>';
+    h.innerHTML=s;
+  })();
+
+  // person rows (venmo, net flow by counterparty)
+  (function(){
+    var host=byId('personrows'); if(!host) return;
+    var people=(D.trends&&D.trends.venmo_by_person)||[];
+    var maxv=people.reduce(function(m,p){return Math.max(m,Math.abs(p.net_out));},1);
+    host.setAttribute('data-max', maxv);
+    var cls=['b','a','g','v'];
+    host.innerHTML = people.map(function(p,i){
+      var dir=p.net_out>=0?'net out':'net in';
+      return rowBar(p.name, Math.abs(p.net_out), cls[i%cls.length], dir);
+    }).join('') || '<div class="row"><div class="top"><span class="lab">No large Venmo counterparties found</span></div></div>';
+  })();
+
+  // svg venmo (all years on record)
+  (function(){var h=document.getElementById('venmosvg');if(!h)return;
+    var V=(D.trends&&D.trends.venmo_yearly_outflow||[]).map(function(r,i,arr){return [String(r.year), r.amount, eraOf(i,arr.length)];});
+    var W=900,H=280,padB=44,padT=28,padL=8,padR=8,max=Math.max.apply(null,V.map(function(d){return d[1]||0;}).concat([1])),n=V.length,gap=10;
+    var bw=(W-padL-padR)/n, eraColors=["#e7dff4","#eceaf1","#dde8f3"];
+    var peakYear=V.reduce(function(a,d){return (d[1]!=null&&(!a||d[1]>a[1]))?d:a;},null)||["",0];
+    var lastYear=V.length?V[V.length-1][0]:"";
+    var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Yearly Venmo outflow, peaking near '+moneyK(peakYear[1])+' in '+peakYear[0]+'.">';
+    var es={},ee={}; V.forEach(function(d,i){var e=d[2]; if(es[e]===undefined)es[e]=i; ee[e]=i;});
+    [0,1,2].forEach(function(e){if(es[e]===undefined)return;var x0=padL+es[e]*bw,x1=padL+(ee[e]+1)*bw;
+      s+='<rect x="'+x0+'" y="'+padT+'" width="'+(x1-x0)+'" height="'+(H-padT-padB)+'" fill="'+eraColors[e]+'" opacity="0.5"/>';});
+    V.forEach(function(d,i){var cx=padL+i*bw+bw/2,bwi=bw-gap,x=padL+i*bw+gap/2;
+      if(d[1]==null){
+        s+='<line x1="'+x.toFixed(1)+'" y1="'+(H-padB)+'" x2="'+(x+bwi).toFixed(1)+'" y2="'+(H-padB)+'" stroke="#cfcabd" stroke-width="2" stroke-dasharray="3 3"/>';
+        s+='<text x="'+cx.toFixed(1)+'" y="'+(H-padB-8)+'" fill="#616975" font-size="11" text-anchor="middle">n/a</text>';
+      } else {
+        var bh=(d[1]/max)*(H-padT-padB),y=H-padB-bh;
+        var col=d[1]>=max*0.97?"#b52d2d":(d[2]===2?"#17734a":"#2f66e0");
+        var lbl=moneyK(d[1]);
+        s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bwi.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2" fill="'+col+'"><title>'+d[0]+': $'+d[1].toLocaleString()+'</title></rect>';
+        if(d[1]>=max*0.3||d[2]===2){s+='<text x="'+cx.toFixed(1)+'" y="'+(y-6).toFixed(1)+'" fill="#1f2630" font-size="12" font-weight="800" text-anchor="middle" font-family="ui-monospace,monospace">'+lbl+'</text>';}
+      }
+      s+='<text x="'+cx.toFixed(1)+'" y="'+(H-padB+18)+'" fill="#5a6270" font-size="11.5" text-anchor="middle">'+"'"+d[0].slice(2)+(d[0]===lastYear?"*":"")+'</text>';
+    });
+    s+='</svg>'; h.innerHTML=s;
+  })();
+
+  // ---------- paint ----------
+  function paintAll(){
+    document.querySelectorAll('.bar[data-val]').forEach(function(b){
+      var host=b.closest('.chart'); if(!host) return;
+      var mx=host.getAttribute('data-max')?parseFloat(host.getAttribute('data-max')):null;
+      if(mx===null){ // infer max within its chart from siblings
+        mx=0; host.querySelectorAll('.bar[data-val]').forEach(function(x){mx=Math.max(mx,parseFloat(x.getAttribute('data-val')||0));});
+      }
+      var v=parseFloat(b.getAttribute('data-val'))||0;
+      requestAnimationFrame(function(){b.style.width=Math.max(2,Math.min(100,v/mx*100))+'%';});
+    });
+    document.querySelectorAll('.bar[data-w]').forEach(function(b){
+      var w=parseFloat(b.getAttribute('data-w'))||0;
+      requestAnimationFrame(function(){b.style.width=Math.max(2,Math.min(100,w))+'%';});
+    });
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){setTimeout(paintAll,60)});}
+  else{setTimeout(paintAll,60);}
+</script>
+</body>
+</html>
