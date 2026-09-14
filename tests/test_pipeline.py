@@ -130,3 +130,20 @@ def test_update_py_renders_all_four_pages(tmp_path):
         assert (out / name).exists()
     payload = json.loads((out / "data.js").read_text(encoding="utf-8").split("=", 1)[1].strip().rstrip(";"))
     assert payload["validation"]["all_passed"]
+
+
+def test_clock_is_pinned_for_the_sample_and_free_for_real_data(built):
+    """The sample's freshness check must not depend on the day the build runs."""
+    import pandas as pd
+    config, loaded, m, checks = built
+    assert config["clock"] == pd.Timestamp("2026-09-12").date()
+    fresh = next(c for c in checks if c["name"].startswith("Data freshness"))
+    assert fresh["passed"] and "11 days ago" in fresh["detail"]
+    assert m["data_quality"]["stale_days"] == 11
+    # unpinned: the wall clock, and a 2026 dataset reads as stale without failing the build
+    free = dict(config); free.pop("clock")
+    assert abs((metrics_lib.today(free) - pd.Timestamp.now()).total_seconds()) < 5
+    later = dict(config); later["clock"] = "2027-01-01"
+    stale = validate.run_checks(loaded, later, metrics_lib.compute_metrics(loaded, later))
+    fresh = next(c for c in stale if c["name"].startswith("Data freshness"))
+    assert not fresh["passed"] and not fresh["critical"]

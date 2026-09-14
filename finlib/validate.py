@@ -1,8 +1,8 @@
 """Fail-loudly checks, run on every `update.py`. See docs/DESIGN.md Sec.9."""
 import statistics
-from datetime import date
 
 from finlib import reconcile as rc
+from finlib.metrics import today
 
 
 class ValidationError(Exception):
@@ -231,7 +231,7 @@ def run_checks(loaded: dict, config: dict, metrics: dict) -> list:
 
     # 9. Data freshness: warn when the newest statement is going stale (DESIGN Sec.12 new-month detection)
     newest = max(bank["Date"].max(), loaded["cards"]["Transaction Date"].max()).date()
-    age_days = (date.today() - newest).days
+    age_days = (today(config).date() - newest).days
     checks.append({
         "name": "Data freshness (newest bank/card row < 35 days old)",
         "passed": age_days <= 35,

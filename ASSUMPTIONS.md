@@ -9,7 +9,7 @@ mistakes a design choice for a fact. Change a row here, then `synth/persona.py` 
 | Area | Assumption | Status |
 |---|---|---|
 | Person | One adult, "Casey Morgan", systems analyst at a county library in the fictional city of Lakeview (state code OH is used only as the city/state tail on card lines) | invented |
-| Window | Bank history 2024-07-01 → 2026-08-31; card exports pulled 2026-09-01; alerts through 2026-09-11; "today" for the static demo is 2026-09-12 | invented |
+| Window | Bank history 2024-07-01 → 2026-08-31; card exports pulled 2026-09-01; alerts through 2026-09-11; "today" is pinned to 2026-09-12 (`config.clock`, and the static demo's frozen date) | invented |
 | Pay | $81,250 gross, 26 biweekly checks from 2024-07-12, $1,970.68 net; deductions sum to gross to the cent (a validation check) | invented, arithmetic verified |
 | Employer benefits | 403(b) at 5.5%, a county defined-benefit pension at 5.75%, health premium fully employer-paid, no disability coverage | invented |
 | Non-salary income | Three deposits: a travel reimbursement, a state tax refund, a class-action settlement — so the salary-only view has something to strip | invented |

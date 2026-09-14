@@ -178,7 +178,8 @@ personal loan stays settled (a Venmo-only ledger still shows the net-out and say
 Identity and pay structure; the cards (autopay, issuer, whether alerts are on); the entities
 above; event dates the trend framing uses (cooking started, card pivot, Autoship enrolled);
 keyword → category maps for bank/card descriptions, Amazon items and Chewy items; display
-names; budgets; merchant aliases and the city/state tails to strip; the corner-store price grid
+names; budgets; merchant aliases and the city/state tails to strip; an optional frozen `clock`
+(the sample pins it to its as-of date); the corner-store price grid
 and known items; one-time costs per month; loans out; transactions the exports have not caught
 yet; per-charge notes; liabilities; tax-bucket and asset-allocation maps; the emergency-fund
 target; and the state unemployment maximum for the runway. The committed copy describes the

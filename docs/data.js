@@ -1,5 +1,5 @@
 window.DASHBOARD_DATA = {
-  "generated_at": "2026-09-14T10:53:23.830767",
+  "generated_at": "2026-09-14T16:26:52.703398",
   "coverage": {
     "bank": {
       "start": "2024-07-01",
@@ -10517,7 +10517,7 @@ window.DASHBOARD_DATA = {
     "nonsalary_items": []
   },
   "card_alerts": {
-    "ingested_at": "2026-09-14 10:53",
+    "ingested_at": "2026-09-14 10:57",
     "review": [
       {
         "subject": "You made a $1.00 transaction with SPEEDWAY 04412",
@@ -11138,7 +11138,7 @@ window.DASHBOARD_DATA = {
     "current_month": "Aug26",
     "newest_transaction": "2026-09-11",
     "newest_verified_transaction": "2026-09-01",
-    "stale_days": 13,
+    "stale_days": 11,
     "pending_manual_count": 1,
     "pending_manual_total": 210.0,
     "pending_manual_as_of": "2026-09-02",
@@ -14843,7 +14843,7 @@ window.DASHBOARD_DATA = {
         "name": "Data freshness (newest bank/card row < 35 days old)",
         "passed": true,
         "critical": false,
-        "detail": "newest transaction 2026-09-01 (13 days ago)"
+        "detail": "newest transaction 2026-09-01 (11 days ago)"
       }
     ]
   }

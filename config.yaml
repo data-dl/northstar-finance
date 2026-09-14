@@ -5,6 +5,10 @@
 # merchant, account and amount is invented. Replace the values (not the keys) to point the
 # pipeline at a real set of exports. See docs/DESIGN.md Sec.6 for what each block does.
 
+# The pipeline's "today". Leave unset for real data (the wall clock is used); the sample pins
+# it to its as-of date so the freshness check and the rewards quarter never rot.
+clock: 2026-09-12
+
 identity:
   name: Casey
   venmo_name: "Casey Morgan"          # how Venmo prints the account holder in From/To

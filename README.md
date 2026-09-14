@@ -96,7 +96,7 @@ raw exports ──► finlib/loaders.py ──► finlib/reconcile.py ──► 
 ## Tests
 
 ```bash
-python -m pytest -q      # 45 tests, ~7 s
+python -m pytest -q      # 46 tests, ~10 s
 ```
 
 The alert parser against a captured (and sanitised) issuer email; the Gmail fetch layer with a
@@ -134,6 +134,8 @@ ASSUMPTIONS.md     every invented default in the sample and where it came from
   never touches the network.
 - The narrative prose in the templates is authored, not generated. Numbers update on every run;
   sentences only when the story changes.
+- The sample pins the pipeline's clock to 2026-09-12 (`config.clock`) so its freshness check is
+  reproducible; real data leaves that unset.
 
 ## Provenance
 

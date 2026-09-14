@@ -106,6 +106,14 @@ def _round2(x):
     return round(float(x), 2)
 
 
+def today(config: dict) -> "pd.Timestamp":
+    """The pipeline's idea of "now". Real data leaves `config.clock` unset and gets the wall
+    clock; the committed sample pins it, so a dataset frozen at one date never reads as stale
+    and the build is reproducible on any day."""
+    clock = (config or {}).get("clock")
+    return pd.Timestamp(str(clock)).normalize() if clock else pd.Timestamp.now()
+
+
 def _tax_bucket(account_type: str, tax_buckets: dict) -> str:
     at = str(account_type).lower()
     for bucket, keywords in tax_buckets.items():
@@ -1304,7 +1312,7 @@ def compute_metrics(loaded: dict, config: dict) -> dict:
                 continue
             if pd.isna(_stmt_ts) or _on_ts > _stmt_ts:
                 _act_after_stmt = _on_ts.date().isoformat()
-        _today = pd.Timestamp.now()
+        _today = today(config)
         _nq = _today + pd.offsets.QuarterBegin(startingMonth=1)
         _next_quarter_label = f"{_nq.year}Q{(_nq.month - 1)//3 + 1}"
         _next_quarter_start = _nq.date().isoformat()
@@ -1502,7 +1510,7 @@ def compute_metrics(loaded: dict, config: dict) -> dict:
     verified_newest = max(bank_max, card_max)
     recorded_newest = max([verified_newest] + [r["date"] for r in manual_txns]
                           + [pd.Timestamp(r["date"]) for r in alert_rows])
-    stale_days = int((pd.Timestamp.now().normalize() - verified_newest.normalize()).days)
+    stale_days = int((today(config).normalize() - verified_newest.normalize()).days)
     data_quality = {
         "missing_months": [_month_label(m) for m in sorted(incomplete_months)],
         "window_months": n_bank_months,
